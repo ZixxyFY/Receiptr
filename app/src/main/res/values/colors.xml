@@ -1,10 +1,37 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="purple_200">#FFBB86FC</color>
-    <color name="purple_500">#FF6200EE</color>
-    <color name="purple_700">#FF3700B3</color>
-    <color name="teal_200">#FF03DAC5</color>
-    <color name="teal_700">#FF018786</color>
+    <!-- App Theme Color Palette -->
+    
+    <!-- Top Bar/Header -->
+    <color name="deep_navy_blue">#1A2C42</color>
+    <color name="deep_navy_blue_alt">#1E3A5F</color>
+    
+    <!-- Background Colors -->
+    <color name="background_light_grey">#F0F2F5</color>
+    <color name="background_off_white">#FAFAFA</color>
+    
+    <!-- Card/Content Backgrounds -->
+    <color name="card_background_white">#FFFFFF</color>
+    <color name="card_background_light">#FDFDFD</color>
+    
+    <!-- Text Colors -->
+    <color name="primary_text_dark">#333333</color>
+    <color name="primary_text_soft">#4A4A4A</color>
+    <color name="secondary_text">#888888</color>
+    
+    <!-- Interactive Elements -->
+    <color name="calm_teal">#4A90E2</color>
+    <color name="navy_blue_interactive">#2A4B7A</color>
+    
+    <!-- Status Colors -->
+    <color name="error_red">#D32F2F</color>
+    <color name="success_green">#4CAF50</color>
+    
+    <!-- Navigation Selected State -->
+    <color name="nav_selected_background">#1A2C42</color>
+    <color name="nav_selected_text">#FFFFFF</color>
+    
+    <!-- Standard Colors (keeping for compatibility) -->
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
 </resources>

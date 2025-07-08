@@ -11,32 +11,57 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 
 private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
-    secondary = PurpleGrey80,
-    tertiary = Pink80
+    primary = CalmTeal,
+    onPrimary = OnPrimaryText,
+    primaryContainer = DeepNavyBlue,
+    onPrimaryContainer = OnPrimaryText,
+    secondary = NavyBlueInteractive,
+    onSecondary = OnPrimaryText,
+    secondaryContainer = DeepNavyBlueAlt,
+    onSecondaryContainer = OnPrimaryText,
+    tertiary = CalmTealVariant,
+    onTertiary = OnPrimaryText,
+    background = PrimaryTextDark,
+    onBackground = CardBackgroundWhite,
+    surface = PrimaryTextSoft,
+    onSurface = CardBackgroundWhite,
+    surfaceVariant = SecondaryText,
+    onSurfaceVariant = CardBackgroundWhite,
+    outline = SecondaryText,
+    error = ErrorRed,
+    onError = OnPrimaryText
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
-    secondary = PurpleGrey40,
-    tertiary = Pink40
-
-    /* Other default colors to override
-    background = Color(0xFFFFFBFE),
-    surface = Color(0xFFFFFBFE),
-    onPrimary = Color.White,
-    onSecondary = Color.White,
-    onTertiary = Color.White,
-    onBackground = Color(0xFF1C1B1F),
-    onSurface = Color(0xFF1C1B1F),
-    */
+    primary = DeepNavyBlue,
+    onPrimary = OnPrimaryText,
+    primaryContainer = CalmTeal,
+    onPrimaryContainer = OnPrimaryText,
+    secondary = CalmTeal,
+    onSecondary = OnPrimaryText,
+    secondaryContainer = BackgroundLightGrey,
+    onSecondaryContainer = PrimaryTextDark,
+    tertiary = NavyBlueInteractive,
+    onTertiary = OnPrimaryText,
+    background = BackgroundLightGrey,
+    onBackground = PrimaryTextDark,
+    surface = CardBackgroundWhite,
+    onSurface = PrimaryTextDark,
+    surfaceVariant = CardBackgroundLight,
+    onSurfaceVariant = PrimaryTextSoft,
+    outline = SecondaryText,
+    outlineVariant = SecondaryText,
+    error = ErrorRed,
+    onError = OnPrimaryText,
+    errorContainer = ErrorRed,
+    onErrorContainer = OnPrimaryText
 )
 
 @Composable
 fun ReceiptrTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = true,
+    // Dynamic color is available on Android 12+ but disabled by default to use custom theme
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {

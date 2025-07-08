@@ -1,0 +1,202 @@
+package com.receiptr.presentation.auth
+
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import com.receiptr.R
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.common.api.ApiException
+import com.receiptr.domain.model.AuthResult
+import com.receiptr.presentation.viewmodel.AuthViewModel
+import com.receiptr.ui.theme.ReceiptrTheme
+import com.receiptr.ui.theme.*
+import com.receiptr.ui.components.*
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun LoginScreen(
+    navController: NavController,
+    viewModel: AuthViewModel = hiltViewModel()
+) {
+    val context = LocalContext.current
+    val authResult by viewModel.authResult.collectAsState()
+    
+    // Google Sign-In launcher
+    val googleSignInLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+        try {
+            val account = task.getResult(ApiException::class.java)
+            account?.idToken?.let { idToken ->
+                viewModel.signInWithGoogle(idToken)
+            }
+        } catch (e: ApiException) {
+            // Handle error
+        }
+    }
+    
+    // Handle authentication result
+    LaunchedEffect(authResult) {
+        when (authResult) {
+            is AuthResult.Success -> {
+                navController.navigate("home") {
+                    popUpTo("login") { inclusive = true }
+                }
+                viewModel.clearAuthResult()
+            }
+            is AuthResult.Error -> {
+                // Error is handled in the UI
+            }
+            else -> {}
+        }
+    }
+    
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        // App Title
+        Text(
+            text = "Receiptr",
+            style = MaterialTheme.typography.displayMedium,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.primary,
+            textAlign = TextAlign.Center
+        )
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        Text(
+            text = "Welcome Back",
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.Medium,
+            color = MaterialTheme.colorScheme.onSurface,
+            textAlign = TextAlign.Center
+        )
+        
+        Spacer(modifier = Modifier.height(8.dp))
+        
+        ReceiptrBodyText(
+            text = "Your AI-powered expense tracking companion",
+            textAlign = TextAlign.Center
+        )
+        
+        Spacer(modifier = Modifier.height(48.dp))
+        
+        // Google Sign-In Button
+        Button(
+            onClick = {
+                val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                    .requestIdToken("615350812301-if0bi9nhsfqrtuk9j3ior29143plb9uj.apps.googleusercontent.com") // Replace with actual web client ID
+                    .requestEmail()
+                    .build()
+                
+                val googleSignInClient = GoogleSignIn.getClient(context, gso)
+                googleSignInLauncher.launch(googleSignInClient.signInIntent)
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp),
+            shape = RoundedCornerShape(12.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = CalmTeal,
+                contentColor = OnPrimaryText
+            ),
+            elevation = ButtonDefaults.elevatedButtonElevation(
+                defaultElevation = 2.dp,
+                pressedElevation = 4.dp
+            )
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_google),
+                    contentDescription = "Google",
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+                Text(
+                    text = "Continue with Google",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Medium
+                )
+            }
+        }
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        // Email/Password Sign-In Button
+        ReceiptrOutlinedButton(
+            text = "Continue with Email",
+            onClick = { navController.navigate("email_auth") },
+            icon = Icons.Default.Email
+        )
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        // Phone Sign-In Button
+        ReceiptrOutlinedButton(
+            text = "Continue with Phone",
+            onClick = { navController.navigate("phone_auth") },
+            icon = Icons.Default.Phone
+        )
+        
+        // Show loading or error state
+        when (val currentAuthResult = authResult) {
+            is AuthResult.Loading -> {
+                Spacer(modifier = Modifier.height(24.dp))
+                CircularProgressIndicator()
+            }
+            is AuthResult.Error -> {
+                Spacer(modifier = Modifier.height(24.dp))
+                ReceiptrErrorText(
+                    text = currentAuthResult.message,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+            else -> {}
+        }
+        
+        Spacer(modifier = Modifier.height(24.dp))
+        
+        // Terms and Privacy
+        ReceiptrSecondaryText(
+            text = "By continuing, you agree to our Terms of Service and Privacy Policy",
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(horizontal = 32.dp)
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun LoginScreenPreview() {
+    ReceiptrTheme {
+        LoginScreen(navController = rememberNavController())
+    }
+}

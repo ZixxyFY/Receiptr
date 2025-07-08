@@ -1,5 +1,92 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Theme.Receiptr" parent="android:Theme.Material.Light.NoActionBar" />
+    <style name="Theme.Receiptr" parent="android:Theme.Material.Light.NoActionBar">
+        <!-- Primary brand color -->
+        <item name="android:colorPrimary">@color/deep_navy_blue</item>
+        <item name="android:colorPrimaryDark">@color/deep_navy_blue_alt</item>
+        <item name="android:colorAccent">@color/calm_teal</item>
+        
+        <!-- Background colors -->
+        <item name="android:windowBackground">@color/background_light_grey</item>
+        <item name="android:colorBackground">@color/background_light_grey</item>
+        
+        <!-- Surface color for cards, dialogs, etc. -->
+        <!-- Note: colorSurface is handled by Material 3 theming in Compose -->
+        
+        <!-- Text colors -->
+        <item name="android:textColorPrimary">@color/primary_text_dark</item>
+        <item name="android:textColorSecondary">@color/secondary_text</item>
+        <item name="android:textColorHint">@color/secondary_text</item>
+        
+        <!-- Status bar -->
+        <item name="android:statusBarColor">@color/deep_navy_blue</item>
+        <item name="android:windowLightStatusBar">false</item>
+        
+        <!-- Navigation bar -->
+        <item name="android:navigationBarColor">@color/deep_navy_blue</item>
+        
+        <!-- Button colors -->
+        <item name="android:colorButtonNormal">@color/calm_teal</item>
+        
+        <!-- Control colors -->
+        <item name="android:colorControlActivated">@color/calm_teal</item>
+        <item name="android:colorControlHighlight">@color/calm_teal</item>
+    </style>
+    
+    <!-- Custom styles for specific UI elements -->
+    <style name="AppBarStyle">
+        <item name="android:background">@color/deep_navy_blue</item>
+        <item name="android:elevation">4dp</item>
+    </style>
+    
+    <style name="CardStyle">
+        <item name="android:background">@color/card_background_white</item>
+        <item name="android:elevation">2dp</item>
+        <item name="android:layout_margin">8dp</item>
+    </style>
+    
+    <style name="PrimaryButtonStyle">
+        <item name="android:background">@color/calm_teal</item>
+        <item name="android:textColor">@color/white</item>
+        <item name="android:elevation">2dp</item>
+        <item name="android:paddingLeft">16dp</item>
+        <item name="android:paddingRight">16dp</item>
+        <item name="android:paddingTop">12dp</item>
+        <item name="android:paddingBottom">12dp</item>
+    </style>
+    
+    <style name="SecondaryButtonStyle">
+        <item name="android:background">@color/navy_blue_interactive</item>
+        <item name="android:textColor">@color/white</item>
+        <item name="android:elevation">2dp</item>
+        <item name="android:paddingLeft">16dp</item>
+        <item name="android:paddingRight">16dp</item>
+        <item name="android:paddingTop">12dp</item>
+        <item name="android:paddingBottom">12dp</item>
+    </style>
+    
+    <style name="NavigationItemStyle">
+        <item name="android:textColor">@color/primary_text_soft</item>
+        <item name="android:background">@color/card_background_white</item>
+    </style>
+    
+    <style name="NavigationItemSelectedStyle">
+        <item name="android:textColor">@color/nav_selected_text</item>
+        <item name="android:background">@color/nav_selected_background</item>
+    </style>
+    
+    <style name="ErrorTextStyle">
+        <item name="android:textColor">@color/error_red</item>
+    </style>
+    
+    <style name="SuccessTextStyle">
+        <item name="android:textColor">@color/success_green</item>
+    </style>
+    
+    <style name="LinkTextStyle">
+        <item name="android:textColor">@color/calm_teal</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+    
 </resources>

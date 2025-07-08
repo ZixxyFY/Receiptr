@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "615350812301",
+    "project_id": "receiptr-40121",
+    "storage_bucket": "receiptr-40121.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:615350812301:android:369286e7639e70854fecc4",
+        "android_client_info": {
+          "package_name": "com.receiptr"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "615350812301-pipbepbifghcnupcsk17uvrj5vcu0443.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.receiptr",
+            "certificate_hash": "89b1f52f8895a317555b62fccaeb1b6119a290f5"
+          }
+        },
+        {
+          "client_id": "615350812301-if0bi9nhsfqrtuk9j3ior29143plb9uj.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBWspVgrTbNF0J86dZFj2Tddydt9yDSkyk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "615350812301-if0bi9nhsfqrtuk9j3ior29143plb9uj.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
