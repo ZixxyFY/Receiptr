@@ -7,6 +7,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
+import androidx.compose.material.icons.automirrored.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -41,7 +42,7 @@ fun WelcomeScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(WelcomeColors.Background),
+            .background(MaterialTheme.colorScheme.background),
         verticalArrangement = Arrangement.SpaceBetween
     ) {
         // Main Content
@@ -53,7 +54,7 @@ fun WelcomeScreen(
                 title = {
                     Text(
                         text = "Receiptr",
-                        color = WelcomeColors.DarkGreen,
+                        color = MaterialTheme.colorScheme.onBackground,
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.fillMaxWidth(),
@@ -65,21 +66,21 @@ fun WelcomeScreen(
                         onClick = { /* Help action */ }
                     ) {
                         Icon(
-                            imageVector = Icons.Outlined.HelpOutline,
+                            imageVector = Icons.AutoMirrored.Outlined.HelpOutline,
                             contentDescription = "Help",
-                            tint = WelcomeColors.DarkGreen
+                            tint = MaterialTheme.colorScheme.onBackground
                         )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = WelcomeColors.Background
+                    containerColor = MaterialTheme.colorScheme.background
                 )
             )
             
             // Welcome Title
             Text(
                 text = "Welcome to Receiptr",
-                color = WelcomeColors.DarkGreen,
+                color = MaterialTheme.colorScheme.onBackground,
                 fontSize = 28.sp,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center,
@@ -92,7 +93,7 @@ fun WelcomeScreen(
             // Subtitle
             Text(
                 text = "Scan, organize, and manage your receipts effortlessly.",
-                color = WelcomeColors.DarkGreen,
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.8f),
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Normal,
                 textAlign = TextAlign.Center,
@@ -116,9 +117,9 @@ fun WelcomeScreen(
                         .aspectRatio(2f / 3f),
                     shape = RoundedCornerShape(12.dp),
                     colors = CardDefaults.cardColors(
-                        containerColor = Color.White
+                        containerColor = MaterialTheme.colorScheme.surface
                     ),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                 ) {
                     Box(
                         modifier = Modifier.fillMaxSize(),
@@ -134,7 +135,7 @@ fun WelcomeScreen(
                                 imageVector = Icons.Filled.Receipt,
                                 contentDescription = "Receipt Scanning",
                                 modifier = Modifier.size(120.dp),
-                                tint = WelcomeColors.SecondaryGreen
+                                tint = MaterialTheme.colorScheme.primary
                             )
                             Spacer(modifier = Modifier.height(16.dp))
                             Text(
@@ -142,7 +143,7 @@ fun WelcomeScreen(
                                 textAlign = TextAlign.Center,
                                 fontSize = 18.sp,
                                 fontWeight = FontWeight.Medium,
-                                color = WelcomeColors.DarkGreen
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                         }
                     }
@@ -158,15 +159,37 @@ fun WelcomeScreen(
                     .fillMaxWidth()
                     .height(48.dp)
                     .padding(horizontal = 16.dp)
-                    .padding(bottom = 12.dp),
+                    .padding(bottom = 8.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = WelcomeColors.PrimaryGreen,
-                    contentColor = WelcomeColors.Background
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
                 ),
                 shape = RoundedCornerShape(12.dp)
             ) {
                 Text(
                     text = "Get Started",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+            
+            // Create Account Button
+            OutlinedButton(
+                onClick = {
+                    navController.navigate("registration")
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp)
+                    .padding(horizontal = 16.dp)
+                    .padding(bottom = 12.dp),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = MaterialTheme.colorScheme.primary
+                ),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Text(
+                    text = "Create Account",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold
                 )

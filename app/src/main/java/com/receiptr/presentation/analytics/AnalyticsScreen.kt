@@ -9,6 +9,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
+import androidx.compose.material.icons.automirrored.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -77,7 +78,7 @@ fun AnalyticsScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(ReceiptrBackground)
+            .background(MaterialTheme.colorScheme.background)
     ) {
         Column(
             modifier = Modifier.fillMaxSize()
@@ -128,7 +129,7 @@ fun AnalyticsTopAppBar(navController: NavController) {
         title = {
             Text(
                 text = "Insights",
-                color = ReceiptrDarkGreen,
+                color = MaterialTheme.colorScheme.onBackground,
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.fillMaxWidth(),
@@ -138,14 +139,14 @@ fun AnalyticsTopAppBar(navController: NavController) {
         navigationIcon = {
             IconButton(onClick = { navController.navigateUp() }) {
                 Icon(
-                    imageVector = Icons.Outlined.ArrowBack,
+                    imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
                     contentDescription = "Back",
-                    tint = ReceiptrDarkGreen
+                    tint = MaterialTheme.colorScheme.onBackground
                 )
             }
         },
         colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = ReceiptrBackground
+            containerColor = MaterialTheme.colorScheme.background
         )
     )
 }
@@ -161,7 +162,7 @@ fun TimePeriodSelector(
             .padding(horizontal = 16.dp, vertical = 12.dp),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
-            containerColor = ReceiptrBorderGreen
+            containerColor = MaterialTheme.colorScheme.surface
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
@@ -179,7 +180,7 @@ fun TimePeriodSelector(
                         .height(40.dp)
                         .clip(RoundedCornerShape(8.dp))
                         .background(
-                            if (isSelected) ReceiptrBackground else Color.Transparent
+                            if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent
                         )
                         .selectable(
                             selected = isSelected,
@@ -191,7 +192,7 @@ fun TimePeriodSelector(
                         text = period.displayName,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
-                        color = if (isSelected) ReceiptrDarkGreen else ReceiptrSecondaryGreen
+                        color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
                     )
                 }
             }
@@ -207,7 +208,7 @@ fun SpendingOverviewChart(data: List<MonthlyData>) {
             .padding(horizontal = 16.dp, vertical = 24.dp),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color.White
+            containerColor = MaterialTheme.colorScheme.surface
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
@@ -221,7 +222,7 @@ fun SpendingOverviewChart(data: List<MonthlyData>) {
                 text = "Spending",
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Medium,
-                color = ReceiptrDarkGreen
+                color = MaterialTheme.colorScheme.onSurface
             )
             
             Spacer(modifier = Modifier.height(8.dp))
@@ -230,7 +231,7 @@ fun SpendingOverviewChart(data: List<MonthlyData>) {
                 text = "$1,234",
                 fontSize = 32.sp,
                 fontWeight = FontWeight.Bold,
-                color = ReceiptrDarkGreen
+                color = MaterialTheme.colorScheme.onSurface
             )
             
             Spacer(modifier = Modifier.height(8.dp))
@@ -239,7 +240,7 @@ fun SpendingOverviewChart(data: List<MonthlyData>) {
                 Text(
                     text = "This month",
                     fontSize = 16.sp,
-                    color = ReceiptrSecondaryGreen
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
@@ -283,10 +284,10 @@ fun BarChart(data: List<MonthlyData>) {
                             .fillMaxWidth()
                             .fillMaxHeight(monthData.percentage)
                             .clip(RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp))
-                            .background(ReceiptrBorderGreen)
+                            .background(MaterialTheme.colorScheme.primaryContainer)
                             .border(
                                 width = 2.dp,
-                                color = ReceiptrSecondaryGreen,
+                                color = MaterialTheme.colorScheme.primary,
                                 shape = RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp)
                             )
                     )
@@ -299,7 +300,7 @@ fun BarChart(data: List<MonthlyData>) {
                     text = monthData.month,
                     fontSize = 13.sp,
                     fontWeight = FontWeight.Bold,
-                    color = ReceiptrSecondaryGreen
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                 )
             }
         }
@@ -318,7 +319,7 @@ fun CategoryAnalysisChart(data: List<CategoryData>) {
             text = "Spending by Category",
             fontSize = 22.sp,
             fontWeight = FontWeight.Bold,
-            color = ReceiptrDarkGreen,
+            color = MaterialTheme.colorScheme.onBackground,
             modifier = Modifier.padding(bottom = 20.dp)
         )
         
@@ -326,7 +327,7 @@ fun CategoryAnalysisChart(data: List<CategoryData>) {
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(16.dp),
             colors = CardDefaults.cardColors(
-                containerColor = Color.White
+                containerColor = MaterialTheme.colorScheme.surface
             ),
             elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
         ) {
@@ -340,7 +341,7 @@ fun CategoryAnalysisChart(data: List<CategoryData>) {
                     text = "Spending",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Medium,
-                    color = ReceiptrDarkGreen
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -349,7 +350,7 @@ fun CategoryAnalysisChart(data: List<CategoryData>) {
                     text = "$1,234",
                     fontSize = 32.sp,
                     fontWeight = FontWeight.Bold,
-                    color = ReceiptrDarkGreen
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -358,7 +359,7 @@ fun CategoryAnalysisChart(data: List<CategoryData>) {
                     Text(
                         text = "This month",
                         fontSize = 16.sp,
-                        color = ReceiptrSecondaryGreen
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
@@ -394,7 +395,7 @@ fun HorizontalBarChart(data: List<CategoryData>) {
                     text = categoryData.category,
                     fontSize = 13.sp,
                     fontWeight = FontWeight.Bold,
-                    color = ReceiptrSecondaryGreen,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                     modifier = Modifier.width(80.dp)
                 )
                 
@@ -413,10 +414,10 @@ fun HorizontalBarChart(data: List<CategoryData>) {
                             .fillMaxWidth(categoryData.percentage)
                             .fillMaxHeight()
                             .clip(RoundedCornerShape(8.dp))
-                            .background(ReceiptrBorderGreen)
+                            .background(MaterialTheme.colorScheme.primaryContainer)
                             .border(
                                 width = 2.dp,
-                                color = ReceiptrSecondaryGreen,
+                                color = MaterialTheme.colorScheme.primary,
                                 shape = RoundedCornerShape(8.dp)
                             )
                     )
@@ -432,7 +433,7 @@ fun AnalyticsBottomNavigation(navController: NavController) {
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color.White
+            containerColor = MaterialTheme.colorScheme.surface
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
     ) {
@@ -497,7 +498,7 @@ fun AnalyticsNavigationItem(
             Icon(
                 imageVector = icon,
                 contentDescription = label,
-                tint = if (isActive) ReceiptrDarkGreen else ReceiptrSecondaryGreen,
+                tint = if (isActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                 modifier = Modifier.size(24.dp)
             )
         }
@@ -505,7 +506,7 @@ fun AnalyticsNavigationItem(
         Text(
             text = label,
             fontSize = 12.sp,
-            color = if (isActive) ReceiptrDarkGreen else ReceiptrSecondaryGreen,
+            color = if (isActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
             textAlign = TextAlign.Center
         )
     }

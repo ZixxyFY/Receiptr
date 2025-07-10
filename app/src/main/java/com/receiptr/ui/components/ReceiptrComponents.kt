@@ -33,10 +33,10 @@ fun ReceiptrPrimaryButton(
         enabled = enabled,
         shape = RoundedCornerShape(12.dp),
         colors = ButtonDefaults.buttonColors(
-            containerColor = CalmTeal,
-            contentColor = OnPrimaryText,
-            disabledContainerColor = SecondaryText,
-            disabledContentColor = CardBackgroundWhite
+            containerColor = MaterialTheme.colorScheme.primary,
+            contentColor = MaterialTheme.colorScheme.onPrimary,
+            disabledContainerColor = MaterialTheme.colorScheme.outline,
+            disabledContentColor = MaterialTheme.colorScheme.onSurface
         ),
         elevation = ButtonDefaults.elevatedButtonElevation(
             defaultElevation = 2.dp,
@@ -84,10 +84,10 @@ fun ReceiptrSecondaryButton(
         enabled = enabled,
         shape = RoundedCornerShape(12.dp),
         colors = ButtonDefaults.buttonColors(
-            containerColor = NavyBlueInteractive,
-            contentColor = OnPrimaryText,
-            disabledContainerColor = SecondaryText,
-            disabledContentColor = CardBackgroundWhite
+            containerColor = MaterialTheme.colorScheme.secondary,
+            contentColor = MaterialTheme.colorScheme.onSecondary,
+            disabledContainerColor = MaterialTheme.colorScheme.outline,
+            disabledContentColor = MaterialTheme.colorScheme.onSurface
         ),
         elevation = ButtonDefaults.elevatedButtonElevation(
             defaultElevation = 2.dp,
@@ -134,12 +134,12 @@ fun ReceiptrOutlinedButton(
         enabled = enabled,
         shape = RoundedCornerShape(12.dp),
         colors = ButtonDefaults.outlinedButtonColors(
-            contentColor = CalmTeal,
-            disabledContentColor = SecondaryText
+            contentColor = MaterialTheme.colorScheme.primary,
+            disabledContentColor = MaterialTheme.colorScheme.outline
         ),
         border = androidx.compose.foundation.BorderStroke(
-            width = 2.dp,
-            color = if (enabled) CalmTeal else SecondaryText
+            width = 1.dp,
+            color = if (enabled) MaterialTheme.colorScheme.outline else MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
         )
     ) {
         Row(
@@ -176,7 +176,7 @@ fun ReceiptrCard(
         modifier = modifier,
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = CardBackgroundWhite
+            containerColor = MaterialTheme.colorScheme.surface
         ),
         elevation = CardDefaults.cardElevation(
             defaultElevation = 2.dp,
@@ -206,17 +206,17 @@ fun ReceiptrTopAppBar(
             Text(
                 text = title,
                 fontWeight = FontWeight.Bold,
-                color = OnPrimaryText
+                color = MaterialTheme.colorScheme.onBackground
             )
         },
         modifier = modifier,
         navigationIcon = navigationIcon ?: {},
         actions = actions,
         colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-            containerColor = DeepNavyBlue,
-            titleContentColor = OnPrimaryText,
-            navigationIconContentColor = OnPrimaryText,
-            actionIconContentColor = OnPrimaryText
+            containerColor = MaterialTheme.colorScheme.background,
+            titleContentColor = MaterialTheme.colorScheme.onBackground,
+            navigationIconContentColor = MaterialTheme.colorScheme.onBackground,
+            actionIconContentColor = MaterialTheme.colorScheme.onBackground
         )
     )
 }
@@ -270,7 +270,7 @@ fun ReceiptrLinkText(
     ) {
         Text(
             text = text,
-            color = CalmTeal,
+            color = MaterialTheme.colorScheme.primary,
             style = MaterialTheme.typography.bodyMedium,
             fontWeight = FontWeight.Bold
         )
@@ -289,7 +289,7 @@ fun ReceiptrSectionHeader(
         text = text,
         style = MaterialTheme.typography.headlineSmall,
         fontWeight = FontWeight.Bold,
-        color = PrimaryTextDark,
+        color = MaterialTheme.colorScheme.onBackground,
         modifier = modifier,
         textAlign = TextAlign.Center
     )
@@ -307,7 +307,7 @@ fun ReceiptrBodyText(
     Text(
         text = text,
         style = MaterialTheme.typography.bodyLarge,
-        color = PrimaryTextSoft,
+        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.8f),
         modifier = modifier,
         textAlign = textAlign
     )
@@ -325,7 +325,7 @@ fun ReceiptrSecondaryText(
     Text(
         text = text,
         style = MaterialTheme.typography.bodyMedium,
-        color = SecondaryText,
+        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
         modifier = modifier,
         textAlign = textAlign
     )

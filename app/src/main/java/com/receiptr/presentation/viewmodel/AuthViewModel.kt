@@ -1,5 +1,6 @@
 package com.receiptr.presentation.viewmodel
 
+import android.app.Activity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.receiptr.domain.model.AuthResult
@@ -10,6 +11,7 @@ import com.receiptr.domain.usecase.LoginWithEmailUseCase
 import com.receiptr.domain.usecase.LoginWithGoogleUseCase
 import com.receiptr.domain.usecase.LoginWithPhoneUseCase
 import com.receiptr.domain.usecase.RegisterUserUseCase
+import com.receiptr.domain.usecase.RegisterUserWithProfileUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -23,7 +25,8 @@ class AuthViewModel @Inject constructor(
     private val loginWithGoogleUseCase: LoginWithGoogleUseCase,
     private val loginWithEmailUseCase: LoginWithEmailUseCase,
     private val loginWithPhoneUseCase: LoginWithPhoneUseCase,
-    private val registerUserUseCase: RegisterUserUseCase
+    private val registerUserUseCase: RegisterUserUseCase,
+    private val registerUserWithProfileUseCase: RegisterUserWithProfileUseCase
 ) : ViewModel() {
     
     private val _authState = MutableStateFlow<AuthState>(AuthState.Loading)
@@ -85,16 +88,22 @@ class AuthViewModel @Inject constructor(
         }
     }
     
-    fun signInWithPhone(phoneNumber: String) {
+    fun signUpWithProfile(email: String, password: String, firstName: String, lastName: String) {
         viewModelScope.launch {
             _authResult.value = AuthResult.Loading
-            val result = loginWithPhoneUseCase(phoneNumber)
+            _authResult.value = registerUserWithProfileUseCase(email, password, firstName, lastName)
+        }
+    }
+    
+    fun signInWithPhone(phoneNumber: String, activity: Activity) {
+        viewModelScope.launch {
+            _authResult.value = AuthResult.Loading
+            val result = loginWithPhoneUseCase(phoneNumber, activity)
             _authResult.value = result
             
-            // In a real implementation, you would get the verification ID from the result
-            // For now, we'll simulate it
+            // If OTP was sent successfully, set verification ID (Firebase stores it internally)
             if (result is AuthResult.Success) {
-                _verificationId.value = "dummy_verification_id"
+                _verificationId.value = "otp_sent" // Just a flag to indicate OTP was sent
             }
         }
     }
@@ -104,7 +113,8 @@ class AuthViewModel @Inject constructor(
         if (verificationId != null) {
             viewModelScope.launch {
                 _authResult.value = AuthResult.Loading
-                _authResult.value = loginWithPhoneUseCase.verifyOtp(verificationId, code)
+                // Pass empty string as verificationId since Firebase stores it internally
+                _authResult.value = loginWithPhoneUseCase.verifyOtp("", code)
             }
         }
     }

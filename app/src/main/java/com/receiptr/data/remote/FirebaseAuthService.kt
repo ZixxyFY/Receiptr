@@ -1,5 +1,6 @@
 package com.receiptr.data.remote
 
+import android.app.Activity
 import com.google.firebase.FirebaseException
 import com.google.firebase.auth.*
 import com.receiptr.domain.model.AuthResult
@@ -9,14 +10,21 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.suspendCancellableCoroutine
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.coroutines.resume
 
 @Singleton
 class FirebaseAuthService @Inject constructor(
     private val firebaseAuth: FirebaseAuth,
     private val userRepository: UserRepository
 ) {
+    
+    // Store verification ID for phone authentication
+    private var storedVerificationId: String? = null
+    private var resendToken: PhoneAuthProvider.ForceResendingToken? = null
     
     fun getCurrentUser(): Flow<User?> = callbackFlow {
         val listener = FirebaseAuth.AuthStateListener { auth ->
@@ -95,20 +103,61 @@ class FirebaseAuthService @Inject constructor(
         }
     }
     
-    suspend fun signInWithPhoneNumber(phoneNumber: String): AuthResult {
-        return try {
-            // This is a simplified implementation
-            // In a real app, you would use PhoneAuthProvider.verifyPhoneNumber
-            // with proper activity and callbacks
-            AuthResult.Error("Phone authentication requires activity context")
-        } catch (e: Exception) {
-            AuthResult.Error(e.message ?: "Phone sign-in failed")
+    suspend fun signInWithPhoneNumber(phoneNumber: String, activity: Activity): AuthResult {
+        return suspendCancellableCoroutine { continuation ->
+            val callbacks = object : PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
+                override fun onVerificationCompleted(credential: PhoneAuthCredential) {
+                    // This callback will be invoked in two situations:
+                    // 1 - Instant verification. In some cases the phone number can be instantly
+                    //     verified without needing to send or enter a verification code.
+                    // 2 - Auto-retrieval. On some devices Google Play services can automatically
+                    //     detect the incoming verification SMS and perform verification without
+                    //     user action.
+                    // For now, we'll treat this as successful verification
+                    continuation.resume(AuthResult.Success(User()))
+                }
+                
+                override fun onVerificationFailed(e: FirebaseException) {
+                    continuation.resume(AuthResult.Error(e.message ?: "Phone verification failed"))
+                }
+                
+                override fun onCodeSent(
+                    verificationId: String,
+                    token: PhoneAuthProvider.ForceResendingToken
+                ) {
+                    // The SMS verification code has been sent to the provided phone number
+                    storedVerificationId = verificationId
+                    resendToken = token
+                    continuation.resume(AuthResult.Success(User())) // Indicate OTP sent successfully
+                }
+            }
+            
+            val options = PhoneAuthOptions.newBuilder(firebaseAuth)
+                .setPhoneNumber(phoneNumber)
+                .setTimeout(60L, TimeUnit.SECONDS)
+                .setActivity(activity)
+                .setCallbacks(callbacks)
+                .build()
+            
+            PhoneAuthProvider.verifyPhoneNumber(options)
         }
     }
     
     suspend fun verifyPhoneNumber(verificationId: String, code: String): AuthResult {
         return try {
-            val credential = PhoneAuthProvider.getCredential(verificationId, code)
+            // Use stored verification ID if provided verificationId is empty or null
+            val actualVerificationId = if (verificationId.isNotBlank()) verificationId else storedVerificationId
+            
+            if (actualVerificationId.isNullOrBlank()) {
+                return AuthResult.Error("No verification ID available. Please request a new code.")
+            }
+            
+            // Validate the code format
+            if (code.length != 6 || !code.all { it.isDigit() }) {
+                return AuthResult.Error("Please enter a valid 6-digit verification code")
+            }
+            
+            val credential = PhoneAuthProvider.getCredential(actualVerificationId, code)
             val result = firebaseAuth.signInWithCredential(credential).await()
             val firebaseUser = result.user
             
@@ -136,7 +185,17 @@ class FirebaseAuthService @Inject constructor(
                 AuthResult.Error("Phone verification failed")
             }
         } catch (e: Exception) {
-            AuthResult.Error(e.message ?: "Phone verification failed")
+            // Handle specific Firebase Auth exceptions
+            val errorMessage = when (e) {
+                is com.google.firebase.auth.FirebaseAuthInvalidCredentialsException -> {
+                    "Invalid verification code. Please try again."
+                }
+                is com.google.firebase.auth.FirebaseAuthException -> {
+                    "Verification failed: ${e.message}"
+                }
+                else -> e.message ?: "Phone verification failed"
+            }
+            AuthResult.Error(errorMessage)
         }
     }
     

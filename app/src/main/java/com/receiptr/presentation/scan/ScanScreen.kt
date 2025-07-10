@@ -29,7 +29,7 @@ fun ScanScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(ReceiptrBackground)
+            .background(MaterialTheme.colorScheme.background)
     ) {
         Column(
             modifier = Modifier.fillMaxSize()
@@ -54,17 +54,17 @@ fun ScanScreen(
                         imageVector = Icons.Outlined.CameraAlt,
                         contentDescription = "Camera Preview",
                         modifier = Modifier.size(64.dp),
-                        tint = ReceiptrSecondaryGreen.copy(alpha = 0.5f)
+                        tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
                         text = "Camera Preview",
-                        color = ReceiptrSecondaryGreen.copy(alpha = 0.7f),
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                         fontSize = 16.sp
                     )
                     Text(
                         text = "Point camera at receipt",
-                        color = ReceiptrSecondaryGreen.copy(alpha = 0.5f),
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
                         fontSize = 14.sp
                     )
                 }
@@ -91,13 +91,13 @@ fun ScanTopAppBar(navController: NavController) {
                 Icon(
                     imageVector = Icons.Filled.Close,
                     contentDescription = "Close",
-                    tint = ReceiptrDarkGreen,
+                    tint = MaterialTheme.colorScheme.onBackground,
                     modifier = Modifier.size(24.dp)
                 )
             }
         },
         colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = ReceiptrBackground
+            containerColor = MaterialTheme.colorScheme.background
         )
     )
 }
@@ -163,7 +163,7 @@ fun ScanBottomSection(navController: NavController) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(ReceiptrBackground)
+            .background(MaterialTheme.colorScheme.background)
     ) {
         // Scan Receipt Button
         Row(
@@ -184,8 +184,8 @@ fun ScanBottomSection(navController: NavController) {
                     .height(56.dp)
                     .widthIn(min = 160.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = ReceiptrPrimaryGreen,
-                    contentColor = ReceiptrBackground
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
                 ),
                 shape = RoundedCornerShape(12.dp)
             ) {
@@ -207,7 +207,7 @@ fun ScanBottomSection(navController: NavController) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(ReceiptrBackground),
+                .background(MaterialTheme.colorScheme.background),
             contentAlignment = Alignment.TopCenter
         ) {
             // Handle bar
@@ -216,7 +216,7 @@ fun ScanBottomSection(navController: NavController) {
                     .width(36.dp)
                     .height(4.dp)
                     .clip(RoundedCornerShape(2.dp))
-                    .background(ReceiptrBorderGreen)
+                    .background(MaterialTheme.colorScheme.outline)
             )
         }
         
@@ -225,7 +225,7 @@ fun ScanBottomSection(navController: NavController) {
             modifier = Modifier
                 .fillMaxWidth()
                 .height(20.dp)
-                .background(ReceiptrBackground)
+                .background(MaterialTheme.colorScheme.background)
         )
     }
 }

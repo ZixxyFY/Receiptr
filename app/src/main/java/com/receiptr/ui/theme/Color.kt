@@ -2,44 +2,92 @@ package com.receiptr.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// App Theme Color Palette - Updated to match Figma design
+// App Theme Color Palette - Updated Green Dark Theme
 
-// Primary Colors - Green Theme from Figma
-val ReceiptrBackground = Color(0xFFF8FCFA)  // Light mint background
-val ReceiptrDarkGreen = Color(0xFF0C1C17)   // Dark green for text
-val ReceiptrPrimaryGreen = Color(0xFF019863) // Primary green for buttons
-val ReceiptrSecondaryGreen = Color(0xFF46A080) // Secondary green for icons
-val ReceiptrBorderGreen = Color(0xFFE6F4EF)  // Border color
+// Primary Colors
+val Primary = Color(0xFF66BB6A)
+val OnPrimary = Color(0xFFFFFFFF)
+val PrimaryContainer = Color(0xFF2E7D32)
+val OnPrimaryContainer = Color(0xFFFFFFFF)
 
-// Legacy Primary Colors - Deep Navy Blue (keeping for compatibility)
-val DeepNavyBlue = Color(0xFF1A2C42)
-val DeepNavyBlueAlt = Color(0xFF1E3A5F)
-val NavyBlueInteractive = Color(0xFF2A4B7A)
+// Secondary Colors
+val Secondary = Color(0xFF81C784)
+val OnSecondary = Color(0xFFFFFFFF)
+val SecondaryContainer = Color(0xFF4CAF50)
+val OnSecondaryContainer = Color(0xFFFFFFFF)
 
-// Accent Color - Calm Teal (keeping for compatibility)
-val CalmTeal = Color(0xFF4A90E2)
-val CalmTealVariant = Color(0xFF3A7BD5)
+// Tertiary Colors
+val Tertiary = Color(0xFF4CAF50)
+val OnTertiary = Color(0xFFFFFFFF)
+val TertiaryContainer = Color(0xFF1B5E20)
+val OnTertiaryContainer = Color(0xFFFFFFFF)
 
 // Background Colors
-val BackgroundLightGrey = Color(0xFFF0F2F5)
+val Background = Color(0xFF121212)
+val OnBackground = Color(0xFFE0E0E0)
+
+// Surface Colors
+val Surface = Color(0xFF1D1D1D)
+val OnSurface = Color(0xFFE0E0E0)
+val SurfaceVariant = Color(0xFF424242)
+val OnSurfaceVariant = Color(0xFFBDBDBD)
+
+// Error Colors
+val Error = Color(0xFFCF6679)
+val OnError = Color(0xFFFFFFFF)
+val ErrorContainer = Color(0xFF880E4F)
+val OnErrorContainer = Color(0xFFFFFFFF)
+
+// Outline
+val Outline = Color(0xFF616161)
+
+// Light Theme Colors (for compatibility - creating lighter versions)
+val ReceiptrBackgroundLight = Color(0xFFF1F8E9)  // Light green background
+val ReceiptrDarkGreenLight = Color(0xFF1B5E20)   // Dark green for text
+val ReceiptrPrimaryGreenLight = Color(0xFF4CAF50) // Primary green for buttons
+val ReceiptrSecondaryGreenLight = Color(0xFF66BB6A) // Secondary green for icons
+val ReceiptrBorderGreenLight = Color(0xFFDCEDC8)  // Border color
+
+// Dark Theme Colors - Using new palette
+val ReceiptrBackgroundDark = Background
+val ReceiptrDarkGreenDark = OnBackground
+val ReceiptrPrimaryGreenDark = Primary
+val ReceiptrSecondaryGreenDark = Secondary
+val ReceiptrBorderGreenDark = Outline
+
+// Compatibility aliases (will be updated to use theme-aware colors)
+val ReceiptrBackground = ReceiptrBackgroundLight
+val ReceiptrDarkGreen = ReceiptrDarkGreenLight
+val ReceiptrPrimaryGreen = ReceiptrPrimaryGreenLight
+val ReceiptrSecondaryGreen = ReceiptrSecondaryGreenLight
+val ReceiptrBorderGreen = ReceiptrBorderGreenLight
+
+// Background Colors - Light Theme
+val BackgroundLightGrey = Color(0xFFF1F8E9)
 val BackgroundOffWhite = Color(0xFFFAFAFA)
 val CardBackgroundWhite = Color(0xFFFFFFFF)
 val CardBackgroundLight = Color(0xFFFDFDFD)
+
+// Background Colors - Dark Theme
+val BackgroundDarkGrey = Surface
+val BackgroundDarkOffBlack = Background
+val CardBackgroundDark = Surface
+val CardBackgroundDarkLight = SurfaceVariant
 
 // Text Colors
 val PrimaryTextDark = Color(0xFF333333)
 val PrimaryTextSoft = Color(0xFF4A4A4A)
 val SecondaryText = Color(0xFF888888)
-val OnPrimaryText = Color(0xFFFFFFFF)
+val OnPrimaryText = OnPrimary
 
 // Status Colors
-val ErrorRed = Color(0xFFD32F2F)
-val SuccessGreen = Color(0xFF4CAF50)
+val ErrorRed = Error
+val SuccessGreen = Primary
 val WarningOrange = Color(0xFFFF9800)
 
 // Navigation Colors
-val NavSelectedBackground = Color(0xFF1A2C42)
-val NavSelectedText = Color(0xFFFFFFFF)
+val NavSelectedBackground = PrimaryContainer
+val NavSelectedText = OnPrimaryContainer
 
 // Legacy colors (keeping for compatibility)
 val Purple80 = Color(0xFFD0BCFF)

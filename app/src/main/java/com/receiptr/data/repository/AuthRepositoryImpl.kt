@@ -1,5 +1,6 @@
 package com.receiptr.data.repository
 
+import android.app.Activity
 import com.receiptr.data.remote.FirebaseAuthService
 import com.receiptr.domain.model.AuthResult
 import com.receiptr.domain.model.User
@@ -27,8 +28,8 @@ class AuthRepositoryImpl @Inject constructor(
         return firebaseAuthService.signUpWithEmailAndPassword(email, password)
     }
     
-    override suspend fun signInWithPhoneNumber(phoneNumber: String): AuthResult {
-        return firebaseAuthService.signInWithPhoneNumber(phoneNumber)
+    override suspend fun signInWithPhoneNumber(phoneNumber: String, activity: Activity): AuthResult {
+        return firebaseAuthService.signInWithPhoneNumber(phoneNumber, activity)
     }
     
     override suspend fun verifyPhoneNumber(verificationId: String, code: String): AuthResult {

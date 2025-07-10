@@ -2,6 +2,7 @@ package com.receiptr.presentation.auth
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -40,7 +41,7 @@ fun LoginScreen(
     val context = LocalContext.current
     val authResult by viewModel.authResult.collectAsState()
     
-    // Google Sign-In launcher
+
     val googleSignInLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
     ) { result ->
@@ -51,11 +52,11 @@ fun LoginScreen(
                 viewModel.signInWithGoogle(idToken)
             }
         } catch (e: ApiException) {
-            // Handle error
+
         }
     }
     
-    // Handle authentication result
+
     LaunchedEffect(authResult) {
         when (authResult) {
             is AuthResult.Success -> {
@@ -65,37 +66,41 @@ fun LoginScreen(
                 viewModel.clearAuthResult()
             }
             is AuthResult.Error -> {
-                // Error is handled in the UI
+
             }
             else -> {}
         }
     }
     
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+            .background(MaterialTheme.colorScheme.background)
     ) {
-        // App Title
-        Text(
-            text = "Receiptr",
-            style = MaterialTheme.typography.displayMedium,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.primary,
-            textAlign = TextAlign.Center
-        )
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text(
+                text = "Receiptr",
+                style = MaterialTheme.typography.displayMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onBackground,
+                textAlign = TextAlign.Center
+            )
         
         Spacer(modifier = Modifier.height(16.dp))
         
-        Text(
-            text = "Welcome Back",
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Medium,
-            color = MaterialTheme.colorScheme.onSurface,
-            textAlign = TextAlign.Center
-        )
+            Text(
+                text = "Welcome Back",
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onBackground,
+                textAlign = TextAlign.Center
+            )
         
         Spacer(modifier = Modifier.height(8.dp))
         
@@ -106,30 +111,29 @@ fun LoginScreen(
         
         Spacer(modifier = Modifier.height(48.dp))
         
-        // Google Sign-In Button
-        Button(
-            onClick = {
-                val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                    .requestIdToken("615350812301-if0bi9nhsfqrtuk9j3ior29143plb9uj.apps.googleusercontent.com") // Replace with actual web client ID
-                    .requestEmail()
-                    .build()
-                
-                val googleSignInClient = GoogleSignIn.getClient(context, gso)
-                googleSignInLauncher.launch(googleSignInClient.signInIntent)
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
-            shape = RoundedCornerShape(12.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = CalmTeal,
-                contentColor = OnPrimaryText
-            ),
-            elevation = ButtonDefaults.elevatedButtonElevation(
-                defaultElevation = 2.dp,
-                pressedElevation = 4.dp
-            )
-        ) {
+            Button(
+                onClick = {
+                    val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                        .requestIdToken("615350812301-if0bi9nhsfqrtuk9j3ior29143plb9uj.apps.googleusercontent.com") // Replace with actual web client ID
+                        .requestEmail()
+                        .build()
+                    
+                    val googleSignInClient = GoogleSignIn.getClient(context, gso)
+                    googleSignInLauncher.launch(googleSignInClient.signInIntent)
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                ),
+                elevation = ButtonDefaults.elevatedButtonElevation(
+                    defaultElevation = 2.dp,
+                    pressedElevation = 4.dp
+                )
+            ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center
@@ -150,46 +154,98 @@ fun LoginScreen(
         
         Spacer(modifier = Modifier.height(16.dp))
         
-        // Email/Password Sign-In Button
-        ReceiptrOutlinedButton(
-            text = "Continue with Email",
-            onClick = { navController.navigate("email_auth") },
-            icon = Icons.Default.Email
-        )
-        
-        Spacer(modifier = Modifier.height(16.dp))
-        
-        // Phone Sign-In Button
-        ReceiptrOutlinedButton(
-            text = "Continue with Phone",
-            onClick = { navController.navigate("phone_auth") },
-            icon = Icons.Default.Phone
-        )
-        
-        // Show loading or error state
-        when (val currentAuthResult = authResult) {
-            is AuthResult.Loading -> {
-                Spacer(modifier = Modifier.height(24.dp))
-                CircularProgressIndicator()
-            }
-            is AuthResult.Error -> {
-                Spacer(modifier = Modifier.height(24.dp))
-                ReceiptrErrorText(
-                    text = currentAuthResult.message,
-                    modifier = Modifier.fillMaxWidth()
+            OutlinedButton(
+                onClick = { navController.navigate("email_auth") },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = MaterialTheme.colorScheme.primary
+                ),
+                border = androidx.compose.foundation.BorderStroke(
+                    width = 1.dp,
+                    color = MaterialTheme.colorScheme.outline
                 )
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Email,
+                        contentDescription = "Email",
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text(
+                        text = "Continue with Email",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
             }
-            else -> {}
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            OutlinedButton(
+                onClick = { navController.navigate("phone_auth") },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = MaterialTheme.colorScheme.primary
+                ),
+                border = androidx.compose.foundation.BorderStroke(
+                    width = 1.dp,
+                    color = MaterialTheme.colorScheme.outline
+                )
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Phone,
+                        contentDescription = "Phone",
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text(
+                        text = "Continue with Phone",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+            }
+        
+            when (val currentAuthResult = authResult) {
+                is AuthResult.Loading -> {
+                    Spacer(modifier = Modifier.height(24.dp))
+                    CircularProgressIndicator(
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+                is AuthResult.Error -> {
+                    Spacer(modifier = Modifier.height(24.dp))
+                    ReceiptrErrorText(
+                        text = currentAuthResult.message,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+                else -> {}
+            }
+            
+            Spacer(modifier = Modifier.height(24.dp))
+            
+
+            ReceiptrSecondaryText(
+                text = "By continuing, you agree to our Terms of Service and Privacy Policy",
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(horizontal = 32.dp)
+            )
         }
-        
-        Spacer(modifier = Modifier.height(24.dp))
-        
-        // Terms and Privacy
-        ReceiptrSecondaryText(
-            text = "By continuing, you agree to our Terms of Service and Privacy Policy",
-            textAlign = TextAlign.Center,
-            modifier = Modifier.padding(horizontal = 32.dp)
-        )
     }
 }
 

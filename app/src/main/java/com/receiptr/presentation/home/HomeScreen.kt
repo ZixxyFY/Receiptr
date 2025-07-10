@@ -10,6 +10,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
+import androidx.compose.material.icons.automirrored.outlined.*
+import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -89,7 +91,7 @@ fun HomeScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(ReceiptrBackground)
+            .background(MaterialTheme.colorScheme.background)
     ) {
         Column(
             modifier = Modifier.fillMaxSize()
@@ -99,7 +101,7 @@ fun HomeScreen(
                 title = {
                     Text(
                         text = "Receiptr",
-                        color = ReceiptrDarkGreen,
+                        color = MaterialTheme.colorScheme.onBackground,
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold
                     )
@@ -107,14 +109,14 @@ fun HomeScreen(
                 actions = {
                     IconButton(onClick = { viewModel.signOut() }) {
                         Icon(
-                            imageVector = Icons.Outlined.ExitToApp,
+                            imageVector = Icons.AutoMirrored.Outlined.ExitToApp,
                             contentDescription = "Sign Out",
-                            tint = ReceiptrDarkGreen
+                            tint = MaterialTheme.colorScheme.onBackground
                         )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = ReceiptrBackground
+                    containerColor = MaterialTheme.colorScheme.background
                 )
             )
             
@@ -162,7 +164,7 @@ fun WelcomeCard(currentUser: com.receiptr.domain.model.User?) {
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color.White
+            containerColor = MaterialTheme.colorScheme.surface
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
@@ -177,13 +179,13 @@ fun WelcomeCard(currentUser: com.receiptr.domain.model.User?) {
                 modifier = Modifier
                     .size(60.dp)
                     .clip(CircleShape)
-                    .background(ReceiptrPrimaryGreen),
+                    .background(MaterialTheme.colorScheme.primary),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = Icons.Filled.Person,
                     contentDescription = "User",
-                    tint = Color.White,
+                    tint = MaterialTheme.colorScheme.onPrimary,
                     modifier = Modifier.size(30.dp)
                 )
             }
@@ -202,14 +204,14 @@ fun WelcomeCard(currentUser: com.receiptr.domain.model.User?) {
                 Text(
                     text = greeting,
                     fontSize = 14.sp,
-                    color = ReceiptrDarkGreen.copy(alpha = 0.7f)
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                 )
                 
                 Text(
                     text = currentUser?.displayName ?: currentUser?.email?.substringBefore('@') ?: "User",
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
-                    color = ReceiptrDarkGreen
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             }
             
@@ -218,7 +220,7 @@ fun WelcomeCard(currentUser: com.receiptr.domain.model.User?) {
                 Icon(
                     imageVector = Icons.Outlined.Notifications,
                     contentDescription = "Notifications",
-                    tint = ReceiptrDarkGreen
+                    tint = MaterialTheme.colorScheme.onSurface
                 )
             }
         }
@@ -231,7 +233,7 @@ fun SpendingOverviewCard() {
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = ReceiptrPrimaryGreen
+            containerColor = MaterialTheme.colorScheme.primary
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
@@ -249,13 +251,13 @@ fun SpendingOverviewCard() {
                     text = "This Month",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Medium,
-                    color = Color.White
+                    color = MaterialTheme.colorScheme.onPrimary
                 )
                 
                 Icon(
-                    imageVector = Icons.Filled.TrendingUp,
+                    imageVector = Icons.AutoMirrored.Filled.TrendingUp,
                     contentDescription = "Trending",
-                    tint = Color.White,
+                    tint = MaterialTheme.colorScheme.onPrimary,
                     modifier = Modifier.size(24.dp)
                 )
             }
@@ -266,7 +268,7 @@ fun SpendingOverviewCard() {
                 text = "$1,247.89",
                 fontSize = 32.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.White
+                color = MaterialTheme.colorScheme.onPrimary
             )
             
             Spacer(modifier = Modifier.height(8.dp))
@@ -275,7 +277,7 @@ fun SpendingOverviewCard() {
                 Text(
                     text = "+12% from last month",
                     fontSize = 14.sp,
-                    color = Color.White.copy(alpha = 0.9f)
+                    color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.9f)
                 )
             }
         }
@@ -289,7 +291,7 @@ fun QuickActionsSection(quickActions: List<QuickAction>) {
             text = "Quick Actions",
             fontSize = 18.sp,
             fontWeight = FontWeight.Bold,
-            color = ReceiptrDarkGreen,
+            color = MaterialTheme.colorScheme.onBackground,
             modifier = Modifier.padding(bottom = 12.dp)
         )
         
@@ -311,7 +313,7 @@ fun QuickActionCard(action: QuickAction) {
             .height(100.dp),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color.White
+            containerColor = MaterialTheme.colorScheme.surface
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         onClick = action.onClick
@@ -326,7 +328,7 @@ fun QuickActionCard(action: QuickAction) {
             Icon(
                 imageVector = action.icon,
                 contentDescription = action.title,
-                tint = ReceiptrPrimaryGreen,
+                tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(32.dp)
             )
             
@@ -336,7 +338,7 @@ fun QuickActionCard(action: QuickAction) {
                 text = action.title,
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Medium,
-                color = ReceiptrDarkGreen,
+                color = MaterialTheme.colorScheme.onSurface,
                 textAlign = TextAlign.Center,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis
@@ -357,7 +359,7 @@ fun RecentReceiptsSection(receipts: List<ReceiptItem>, navController: NavControl
                 text = "Recent Receipts",
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
-                color = ReceiptrDarkGreen
+                color = MaterialTheme.colorScheme.onBackground
             )
             
             TextButton(onClick = { navController.navigate("receipts") }) {
@@ -387,7 +389,7 @@ fun ReceiptItemCard(receipt: ReceiptItem) {
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color.White
+            containerColor = MaterialTheme.colorScheme.surface
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
@@ -402,13 +404,13 @@ fun ReceiptItemCard(receipt: ReceiptItem) {
                 modifier = Modifier
                     .size(40.dp)
                     .clip(CircleShape)
-                    .background(ReceiptrSecondaryGreen.copy(alpha = 0.2f)),
+                    .background(MaterialTheme.colorScheme.secondary.copy(alpha = 0.2f)),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = Icons.Filled.Receipt,
                     contentDescription = "Receipt",
-                    tint = ReceiptrSecondaryGreen,
+                    tint = MaterialTheme.colorScheme.secondary,
                     modifier = Modifier.size(20.dp)
                 )
             }
@@ -422,13 +424,13 @@ fun ReceiptItemCard(receipt: ReceiptItem) {
                     text = receipt.storeName,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Medium,
-                    color = ReceiptrDarkGreen
+                    color = MaterialTheme.colorScheme.onBackground
                 )
                 
                 Text(
                     text = receipt.category,
                     fontSize = 14.sp,
-                    color = ReceiptrDarkGreen.copy(alpha = 0.6f)
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
                 )
             }
             
@@ -439,13 +441,13 @@ fun ReceiptItemCard(receipt: ReceiptItem) {
                     text = "$${"%.2f".format(receipt.amount)}",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
-                    color = ReceiptrDarkGreen
+                    color = MaterialTheme.colorScheme.onBackground
                 )
                 
                 Text(
                     text = SimpleDateFormat("MMM dd", Locale.getDefault()).format(receipt.date),
                     fontSize = 12.sp,
-                    color = ReceiptrDarkGreen.copy(alpha = 0.6f)
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
                 )
             }
         }
@@ -458,7 +460,7 @@ fun EmptyReceiptsCard() {
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color.White
+            containerColor = MaterialTheme.colorScheme.surface
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
@@ -471,7 +473,7 @@ fun EmptyReceiptsCard() {
             Icon(
                 imageVector = Icons.Outlined.Receipt,
                 contentDescription = "No receipts",
-                tint = ReceiptrSecondaryGreen,
+                tint = MaterialTheme.colorScheme.secondary,
                 modifier = Modifier.size(48.dp)
             )
             
@@ -481,13 +483,13 @@ fun EmptyReceiptsCard() {
                 text = "No receipts yet",
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Medium,
-                color = ReceiptrDarkGreen
+                color = MaterialTheme.colorScheme.onBackground
             )
             
             Text(
                 text = "Start by scanning your first receipt!",
                 fontSize = 14.sp,
-                color = ReceiptrDarkGreen.copy(alpha = 0.6f),
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
                 textAlign = TextAlign.Center
             )
         }
@@ -500,7 +502,7 @@ fun BottomNavigationHome(navController: NavController) {
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color.White
+            containerColor = MaterialTheme.colorScheme.surface
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
     ) {
@@ -578,7 +580,7 @@ fun NavigationItem(
             Icon(
                 imageVector = icon,
                 contentDescription = label,
-                tint = if (isActive) ReceiptrPrimaryGreen else ReceiptrSecondaryGreen,
+                tint = if (isActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary,
                 modifier = Modifier.size(24.dp)
             )
         }
@@ -586,7 +588,7 @@ fun NavigationItem(
         Text(
             text = label,
             fontSize = 10.sp,
-            color = if (isActive) ReceiptrPrimaryGreen else ReceiptrSecondaryGreen,
+            color = if (isActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary,
             textAlign = TextAlign.Center
         )
     }

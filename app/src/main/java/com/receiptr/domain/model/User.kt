@@ -48,7 +48,9 @@ data class User(
                 lastName = map["lastName"] as? String,
                 isActive = map["isActive"] as? Boolean ?: true,
                 preferences = when (val prefs = map["preferences"]) {
-                    is Map<*, *> -> prefs.filterKeys { it is String }.mapKeys { it.key as String }
+                    is Map<*, *> -> prefs.entries
+                        .filter { it.key is String && it.value != null }
+                        .associate { (it.key as String) to it.value!! }
                     else -> emptyMap()
                 }
             )

@@ -4,12 +4,14 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import android.app.Activity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -33,6 +35,8 @@ fun PhoneAuthScreen(
     var otpCode by remember { mutableStateOf("") }
     var isOtpSent by remember { mutableStateOf(false) }
     
+    val context = LocalContext.current
+    val activity = context as Activity
     val authResult by viewModel.authResult.collectAsState()
     val verificationId by viewModel.verificationId.collectAsState()
     
@@ -67,7 +71,7 @@ fun PhoneAuthScreen(
         ) {
             IconButton(onClick = { navController.navigateUp() }) {
                 Icon(
-                    imageVector = Icons.Default.ArrowBack,
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = "Back"
                 )
             }
@@ -118,7 +122,13 @@ fun PhoneAuthScreen(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
                 singleLine = true,
-                placeholder = { Text("+1 (555) 123-4567") }
+                placeholder = { Text("+1 (555) 123-4567") },
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                    focusedLabelColor = MaterialTheme.colorScheme.primary,
+                    unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             )
             
             Spacer(modifier = Modifier.height(32.dp))
@@ -126,13 +136,19 @@ fun PhoneAuthScreen(
             // Send OTP Button
             Button(
                 onClick = {
-                    viewModel.signInWithPhone(phoneNumber)
+                    viewModel.signInWithPhone(phoneNumber, activity)
                 },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
                 shape = RoundedCornerShape(12.dp),
-                enabled = phoneNumber.isNotEmpty() && authResult !is AuthResult.Loading
+                enabled = phoneNumber.isNotEmpty() && authResult !is AuthResult.Loading,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                    disabledContainerColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
+                    disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                )
             ) {
                 if (authResult is AuthResult.Loading) {
                     CircularProgressIndicator(
@@ -178,7 +194,13 @@ fun PhoneAuthScreen(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
                 singleLine = true,
-                placeholder = { Text("123456") }
+                placeholder = { Text("123456") },
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                    focusedLabelColor = MaterialTheme.colorScheme.primary,
+                    unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             )
             
             Spacer(modifier = Modifier.height(32.dp))
@@ -192,7 +214,13 @@ fun PhoneAuthScreen(
                     .fillMaxWidth()
                     .height(56.dp),
                 shape = RoundedCornerShape(12.dp),
-                enabled = otpCode.isNotEmpty() && authResult !is AuthResult.Loading
+                enabled = otpCode.isNotEmpty() && authResult !is AuthResult.Loading,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                    disabledContainerColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
+                    disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                )
             ) {
                 if (authResult is AuthResult.Loading) {
                     CircularProgressIndicator(
@@ -213,7 +241,7 @@ fun PhoneAuthScreen(
             // Resend Code Button
             TextButton(
                 onClick = {
-                    viewModel.signInWithPhone(phoneNumber)
+                    viewModel.signInWithPhone(phoneNumber, activity)
                 },
                 modifier = Modifier.fillMaxWidth()
             ) {

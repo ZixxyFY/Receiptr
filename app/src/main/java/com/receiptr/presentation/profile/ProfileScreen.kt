@@ -50,13 +50,13 @@ fun ProfileScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF8FCFA))
+            .background(MaterialTheme.colorScheme.background)
     ) {
         // Top Header with back button and title
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(Color(0xFFF8FCFA))
+                .background(MaterialTheme.colorScheme.background)
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -67,7 +67,7 @@ fun ProfileScreen(
                 Icon(
                     imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
                     contentDescription = "Back",
-                    tint = Color(0xFF0C1C17),
+                    tint = MaterialTheme.colorScheme.onBackground,
                     modifier = Modifier.size(24.dp)
                 )
             }
@@ -76,7 +76,7 @@ fun ProfileScreen(
                 text = "Profile",
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFF0C1C17),
+                color = MaterialTheme.colorScheme.onBackground,
                 modifier = Modifier
                     .weight(1f)
                     .padding(end = 48.dp),
@@ -101,14 +101,14 @@ fun ProfileScreen(
                         modifier = Modifier
                             .size(128.dp)
                             .clip(CircleShape)
-                            .background(Color(0xFF46A080)),
+                            .background(MaterialTheme.colorScheme.primary),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Filled.Person,
                             contentDescription = "Profile Picture",
                             modifier = Modifier.size(64.dp),
-                            tint = Color.White
+                            tint = MaterialTheme.colorScheme.onPrimary
                         )
                     }
                     
@@ -119,7 +119,7 @@ fun ProfileScreen(
                         text = currentUser?.displayName ?: currentUser?.email?.substringBefore('@') ?: "User",
                         fontSize = 22.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF0C1C17)
+                        color = MaterialTheme.colorScheme.onBackground
                     )
                     
                     Spacer(modifier = Modifier.height(4.dp))
@@ -128,7 +128,7 @@ fun ProfileScreen(
                     Text(
                         text = currentUser?.email ?: "user@email.com",
                         fontSize = 16.sp,
-                        color = Color(0xFF46A080)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -139,7 +139,7 @@ fun ProfileScreen(
                     text = "Preferences",
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF0C1C17),
+                    color = MaterialTheme.colorScheme.onBackground,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp)
                 )
                 
@@ -157,7 +157,7 @@ fun ProfileScreen(
                     text = "Account",
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF0C1C17),
+                    color = MaterialTheme.colorScheme.onBackground,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp)
                 )
                 
@@ -185,7 +185,7 @@ fun ProfileScreen(
                     text = "Support",
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF0C1C17),
+                    color = MaterialTheme.colorScheme.onBackground,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp)
                 )
                 
@@ -218,8 +218,8 @@ fun ProfileScreen(
                     .height(40.dp)
                     .padding(horizontal = 16.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFE6F4EF),
-                    contentColor = Color(0xFF0C1C17)
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant
                 ),
                 shape = RoundedCornerShape(12.dp)
             ) {
@@ -235,7 +235,7 @@ fun ProfileScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(20.dp)
-                    .background(Color(0xFFF8FCFA))
+                    .background(MaterialTheme.colorScheme.background)
             )
         }
     }
@@ -254,7 +254,7 @@ fun ProfileMenuItemFigma(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color(0xFFF8FCFA))
+            .background(MaterialTheme.colorScheme.background)
             .clickable { if (!hasToggle) onClick() }
             .padding(horizontal = 16.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -263,7 +263,7 @@ fun ProfileMenuItemFigma(
         Text(
             text = title,
             fontSize = 16.sp,
-            color = Color(0xFF0C1C17),
+            color = MaterialTheme.colorScheme.onBackground,
             modifier = Modifier.weight(1f)
         )
         
@@ -277,7 +277,7 @@ fun ProfileMenuItemFigma(
                         .height(31.dp)
                         .clip(RoundedCornerShape(15.5.dp))
                         .background(
-                            if (toggleValue) Color(0xFF019863) else Color(0xFFE6F4EF)
+                            if (toggleValue) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant
                         )
                         .clickable { onToggleChange(!toggleValue) }
                         .padding(2.dp),
@@ -297,7 +297,7 @@ fun ProfileMenuItemFigma(
                 Text(
                     text = value,
                     fontSize = 16.sp,
-                    color = Color(0xFF0C1C17)
+                    color = MaterialTheme.colorScheme.onBackground
                 )
             }
             hasArrow -> {
@@ -305,7 +305,7 @@ fun ProfileMenuItemFigma(
                 Icon(
                     imageVector = Icons.AutoMirrored.Outlined.ArrowForward,
                     contentDescription = "Navigate",
-                    tint = Color(0xFF0C1C17),
+                    tint = MaterialTheme.colorScheme.onBackground,
                     modifier = Modifier.size(24.dp)
                 )
             }
