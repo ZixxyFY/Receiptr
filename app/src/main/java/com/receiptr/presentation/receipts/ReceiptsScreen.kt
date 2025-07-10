@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.receiptr.ui.components.SkeletonReceiptsContent
 import com.receiptr.ui.theme.*
 import java.text.SimpleDateFormat
 import java.util.*
@@ -42,6 +43,15 @@ data class Receipt(
 fun ReceiptsScreen(
     navController: NavController
 ) {
+    // Loading state to simulate data loading
+    var isLoading by remember { mutableStateOf(true) }
+    
+    // Simulate loading delay
+    LaunchedEffect(Unit) {
+        kotlinx.coroutines.delay(2000) // 2 second delay
+        isLoading = false
+    }
+    
     // Sample receipt data
     val receipts = remember {
         listOf(
@@ -102,32 +112,36 @@ fun ReceiptsScreen(
             modifier = Modifier.fillMaxSize()
         ) {
             // Top Header
-            ReceiptsTopAppBar()
+            ReceiptsTopAppBar(navController)
             
             // Scan Receipt Button
             ScanReceiptButton(navController)
             
-            // Content
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(bottom = 80.dp), // Space for bottom nav
-                contentPadding = PaddingValues(top = 8.dp)
-            ) {
-                item {
-                    // Section Title
-                    Text(
-                        text = "Recent Receipts",
-                        fontSize = 22.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onBackground,
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 20.dp)
-                    )
-                }
-                
-                items(receipts) { receipt ->
-                    ReceiptCard(receipt = receipt)
-                    Spacer(modifier = Modifier.height(16.dp))
+            // Content with loading state
+            if (isLoading) {
+                SkeletonReceiptsContent()
+            } else {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(bottom = 80.dp), // Space for bottom nav
+                    contentPadding = PaddingValues(top = 8.dp)
+                ) {
+                    item {
+                        // Section Title
+                        Text(
+                            text = "Recent Receipts",
+                            fontSize = 22.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onBackground,
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 20.dp)
+                        )
+                    }
+                    
+                    items(receipts) { receipt ->
+                        ReceiptCard(receipt = receipt)
+                        Spacer(modifier = Modifier.height(16.dp))
+                    }
                 }
             }
         }
@@ -143,7 +157,7 @@ fun ReceiptsScreen(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ReceiptsTopAppBar() {
+fun ReceiptsTopAppBar(navController: NavController) {
     TopAppBar(
         title = {
             Text(
@@ -156,7 +170,7 @@ fun ReceiptsTopAppBar() {
             )
         },
         actions = {
-            IconButton(onClick = { /* TODO: Settings */ }) {
+            IconButton(onClick = { navController.navigate("settings") }) {
                 Icon(
                     imageVector = Icons.Outlined.Settings,
                     contentDescription = "Settings",

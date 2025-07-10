@@ -29,7 +29,10 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.receiptr.domain.model.AuthState
+import com.receiptr.domain.model.UiState
 import com.receiptr.presentation.viewmodel.AuthViewModel
+import com.receiptr.presentation.viewmodel.HomeViewModel
+import com.receiptr.ui.components.SkeletonHomeContent
 import com.receiptr.ui.theme.*
 import java.text.SimpleDateFormat
 import java.util.*
@@ -53,10 +56,13 @@ data class QuickAction(
 @Composable
 fun HomeScreen(
     navController: NavController,
-    viewModel: AuthViewModel = hiltViewModel()
+    authViewModel: AuthViewModel = hiltViewModel(),
+    homeViewModel: HomeViewModel = hiltViewModel()
 ) {
-    val currentUser by viewModel.currentUser.collectAsState()
-    val authState by viewModel.authState.collectAsState()
+    val currentUser by authViewModel.currentUser.collectAsState()
+    val authState by authViewModel.authState.collectAsState()
+    val homeDataState by homeViewModel.homeDataState.collectAsState()
+    val refreshing by homeViewModel.refreshing.collectAsState()
     
     // Handle authentication state
     LaunchedEffect(authState) {
@@ -70,21 +76,13 @@ fun HomeScreen(
         }
     }
     
-    // Sample data - replace with real data from ViewModel
-    val recentReceipts = remember {
-        listOf(
-            ReceiptItem("1", "Starbucks", 12.50, Date(), "Food & Dining"),
-            ReceiptItem("2", "Amazon", 89.99, Date(), "Shopping"),
-            ReceiptItem("3", "Shell Gas", 45.20, Date(), "Transportation")
-        )
-    }
-    
+    // Quick actions (static data)
     val quickActions = remember {
         listOf(
             QuickAction("Scan Receipt", Icons.Filled.CameraAlt) { navController.navigate("scan") },
             QuickAction("View All", Icons.Filled.Receipt) { navController.navigate("receipts") },
             QuickAction("Analytics", Icons.Filled.Analytics) { navController.navigate("analytics") },
-            QuickAction("Settings", Icons.Filled.Settings) { /* TODO: Navigate to settings */ }
+            QuickAction("Settings", Icons.Filled.Settings) { navController.navigate("settings") }
         )
     }
     
@@ -107,7 +105,7 @@ fun HomeScreen(
                     )
                 },
                 actions = {
-                    IconButton(onClick = { viewModel.signOut() }) {
+                    IconButton(onClick = { authViewModel.signOut() }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Outlined.ExitToApp,
                             contentDescription = "Sign Out",
@@ -120,32 +118,60 @@ fun HomeScreen(
                 )
             )
             
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(bottom = 80.dp), // Space for bottom nav
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                item {
-                    // Welcome Card
-                    WelcomeCard(currentUser = currentUser)
+            // Handle different UI states
+            val currentHomeDataState = homeDataState
+            when (currentHomeDataState) {
+                is UiState.Loading, is UiState.Idle -> {
+                    SkeletonHomeContent()
                 }
                 
-                item {
-                    // Spending Overview
-                    SpendingOverviewCard()
+                is UiState.Success -> {
+                    val homeData = currentHomeDataState.data
+                    
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(bottom = 80.dp), // Space for bottom nav
+                        contentPadding = PaddingValues(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        item {
+                            // Welcome Card
+                            WelcomeCard(currentUser = currentUser)
+                        }
+                        
+                        item {
+                            // Spending Overview
+                            SpendingOverviewCard(
+                                monthlySpending = homeData.monthlySpending,
+                                spendingChange = homeData.spendingChange
+                            )
+                        }
+                        
+                        item {
+                            // Quick Actions
+                            QuickActionsSection(quickActions)
+                        }
+                        
+                        item {
+                            // Recent Receipts
+                            RecentReceiptsSection(homeData.recentReceipts, navController)
+                        }
+                    }
                 }
                 
-                item {
-                    // Quick Actions
-                    QuickActionsSection(quickActions)
+                is UiState.Error -> {
+                    ErrorContent(
+                        message = currentHomeDataState.message,
+                        onRetry = { homeViewModel.loadHomeData() }
+                    )
                 }
                 
-            item {
-                // Recent Receipts
-                RecentReceiptsSection(recentReceipts, navController)
-            }
+                is UiState.Empty -> {
+                    EmptyContent(
+                        onRefresh = { homeViewModel.loadHomeData() }
+                    )
+                }
             }
         }
         
@@ -228,7 +254,10 @@ fun WelcomeCard(currentUser: com.receiptr.domain.model.User?) {
 }
 
 @Composable
-fun SpendingOverviewCard() {
+fun SpendingOverviewCard(
+    monthlySpending: Double = 1247.89,
+    spendingChange: String = "+12% from last month"
+) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
@@ -265,7 +294,7 @@ fun SpendingOverviewCard() {
             Spacer(modifier = Modifier.height(12.dp))
             
             Text(
-                text = "$1,247.89",
+                text = "$${String.format("%.2f", monthlySpending)}",
                 fontSize = 32.sp,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onPrimary
@@ -275,7 +304,7 @@ fun SpendingOverviewCard() {
             
             Row {
                 Text(
-                    text = "+12% from last month",
+                    text = spendingChange,
                     fontSize = 14.sp,
                     color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.9f)
                 )
@@ -591,6 +620,104 @@ fun NavigationItem(
             color = if (isActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary,
             textAlign = TextAlign.Center
         )
+    }
+}
+
+@Composable
+fun ErrorContent(
+    message: String,
+    onRetry: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Icon(
+            imageVector = Icons.Outlined.ErrorOutline,
+            contentDescription = "Error",
+            tint = MaterialTheme.colorScheme.error,
+            modifier = Modifier.size(64.dp)
+        )
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        Text(
+            text = "Something went wrong",
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onBackground
+        )
+        
+        Spacer(modifier = Modifier.height(8.dp))
+        
+        Text(
+            text = message,
+            fontSize = 14.sp,
+            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
+            textAlign = TextAlign.Center
+        )
+        
+        Spacer(modifier = Modifier.height(24.dp))
+        
+        Button(
+            onClick = onRetry,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.primary
+            )
+        ) {
+            Text("Try Again")
+        }
+    }
+}
+
+@Composable
+fun EmptyContent(
+    onRefresh: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Icon(
+            imageVector = Icons.Outlined.Receipt,
+            contentDescription = "No data",
+            tint = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f),
+            modifier = Modifier.size(64.dp)
+        )
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        Text(
+            text = "No data available",
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onBackground
+        )
+        
+        Spacer(modifier = Modifier.height(8.dp))
+        
+        Text(
+            text = "Pull to refresh or try again",
+            fontSize = 14.sp,
+            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
+        )
+        
+        Spacer(modifier = Modifier.height(24.dp))
+        
+        Button(
+            onClick = onRefresh,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.primary
+            )
+        ) {
+            Text("Refresh")
+        }
     }
 }
 

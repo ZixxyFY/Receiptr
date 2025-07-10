@@ -13,6 +13,7 @@ import com.receiptr.presentation.onboarding.WelcomeScreen
 import com.receiptr.presentation.profile.ProfileScreen
 import com.receiptr.presentation.receipts.ReceiptsScreen
 import com.receiptr.presentation.scan.ScanScreen
+import com.receiptr.presentation.settings.SettingsScreen
 
 @Composable
 fun NavGraph(navController: NavHostController) {
@@ -92,10 +93,10 @@ fun NavGraph(navController: NavHostController) {
         
         composable(
             "home",
-            enterTransition = NavigationAnimationSpecs.scaleEnter(),
-            exitTransition = NavigationAnimationSpecs.scaleExit(),
-            popEnterTransition = NavigationAnimationSpecs.scaleEnter(),
-            popExitTransition = NavigationAnimationSpecs.scaleExit()
+            enterTransition = NavigationAnimationSpecs.bouncyScaleEnter(),
+            exitTransition = NavigationAnimationSpecs.bouncyScaleExit(),
+            popEnterTransition = NavigationAnimationSpecs.bouncyScaleEnter(),
+            popExitTransition = NavigationAnimationSpecs.bouncyScaleExit()
         ) {
             HomeScreen(navController = navController)
         }
@@ -132,12 +133,22 @@ fun NavGraph(navController: NavHostController) {
         
         composable(
             "profile",
-            enterTransition = NavigationAnimationSpecs.fastSlideEnter(),
-            exitTransition = NavigationAnimationSpecs.fastSlideExit(),
-            popEnterTransition = NavigationAnimationSpecs.backwardSlide(),
-            popExitTransition = NavigationAnimationSpecs.backwardSlideExit()
+            enterTransition = NavigationAnimationSpecs.crossFadeEnter(),
+            exitTransition = NavigationAnimationSpecs.crossFadeExit(),
+            popEnterTransition = NavigationAnimationSpecs.crossFadeEnter(),
+            popExitTransition = NavigationAnimationSpecs.crossFadeExit()
         ) {
             ProfileScreen(navController = navController)
+        }
+        
+        composable(
+            "settings",
+            enterTransition = NavigationAnimationSpecs.slideUpEnter(),
+            exitTransition = NavigationAnimationSpecs.slideUpExit(),
+            popEnterTransition = NavigationAnimationSpecs.slideUpEnter(),
+            popExitTransition = NavigationAnimationSpecs.slideUpExit()
+        ) {
+            SettingsScreen(navController = navController)
         }
     }
 }

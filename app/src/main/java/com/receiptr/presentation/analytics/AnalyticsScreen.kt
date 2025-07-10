@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.receiptr.ui.components.SkeletonAnalyticsContent
 import com.receiptr.ui.theme.*
 
 // Data models for analytics
@@ -51,6 +52,13 @@ fun AnalyticsScreen(
     navController: NavController
 ) {
     var selectedPeriod by remember { mutableStateOf(TimePeriod.MONTHLY) }
+    var isLoading by remember { mutableStateOf(true) }
+    
+    // Simulate loading delay
+    LaunchedEffect(Unit) {
+        kotlinx.coroutines.delay(1800) // 1.8 second delay
+        isLoading = false
+    }
     
     // Sample data
     val monthlyData = remember {
@@ -86,29 +94,33 @@ fun AnalyticsScreen(
             // Top Header
             AnalyticsTopAppBar(navController)
             
-            // Content
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(bottom = 80.dp), // Space for bottom nav
-                contentPadding = PaddingValues(bottom = 16.dp)
-            ) {
-                item {
-                    // Time Period Selector
-                    TimePeriodSelector(
-                        selectedPeriod = selectedPeriod,
-                        onPeriodSelected = { selectedPeriod = it }
-                    )
-                }
-                
-                item {
-                    // Spending Overview Chart
-                    SpendingOverviewChart(monthlyData)
-                }
-                
-                item {
-                    // Category Analysis
-                    CategoryAnalysisChart(categoryData)
+            // Content with loading state
+            if (isLoading) {
+                SkeletonAnalyticsContent()
+            } else {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(bottom = 80.dp), // Space for bottom nav
+                    contentPadding = PaddingValues(bottom = 16.dp)
+                ) {
+                    item {
+                        // Time Period Selector
+                        TimePeriodSelector(
+                            selectedPeriod = selectedPeriod,
+                            onPeriodSelected = { selectedPeriod = it }
+                        )
+                    }
+                    
+                    item {
+                        // Spending Overview Chart
+                        SpendingOverviewChart(monthlyData)
+                    }
+                    
+                    item {
+                        // Category Analysis
+                        CategoryAnalysisChart(categoryData)
+                    }
                 }
             }
         }
