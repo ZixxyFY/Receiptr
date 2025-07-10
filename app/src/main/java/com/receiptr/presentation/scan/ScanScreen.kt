@@ -10,6 +10,8 @@ import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import android.net.Uri
+import android.widget.Toast
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -21,11 +23,25 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.receiptr.ui.theme.*
+import androidx.camera.core.Preview as CameraPreview
+import androidx.camera.lifecycle.ProcessCameraProvider
+import androidx.camera.view.PreviewView
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.LifecycleOwner
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.isGranted
+import com.google.accompanist.permissions.rememberPermissionState
 
 @Composable
 fun ScanScreen(
     navController: NavController
 ) {
+    var capturedImageUri by remember { mutableStateOf<Uri?>(null) }
+    val context = LocalContext.current
+    val cameraManager = remember { CameraManager(context) }
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -42,36 +58,17 @@ fun ScanScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
-                    .background(Color.Black.copy(alpha = 0.1f)), // Camera preview placeholder
-                contentAlignment = Alignment.Center
             ) {
-                // Camera preview would go here
-                // For now, showing a placeholder
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.CameraAlt,
-                        contentDescription = "Camera Preview",
-                        modifier = Modifier.size(64.dp),
-                        tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text(
-                        text = "Camera Preview",
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-                        fontSize = 16.sp
-                    )
-                    Text(
-                        text = "Point camera at receipt",
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
-                        fontSize = 14.sp
-                    )
-                }
+                CameraXView(
+                    onImageCaptured = { uri ->
+                        capturedImageUri = uri
+                        Toast.makeText(context, "Photo captured successfully!", Toast.LENGTH_SHORT).show()
+                    },
+                    onError = { exception ->
+                        Toast.makeText(context, "Error: ${exception.message}", Toast.LENGTH_SHORT).show()
+                    }
+                )
             }
-            
-            // Camera Controls
-            CameraControls()
             
             // Bottom Section
             ScanBottomSection(navController)
@@ -103,7 +100,9 @@ fun ScanTopAppBar(navController: NavController) {
 }
 
 @Composable
-fun CameraControls() {
+fun CameraControls(
+    onTakePhoto: () -> Unit = {}
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -122,7 +121,7 @@ fun CameraControls() {
         CameraControlButton(
             icon = Icons.Filled.CameraAlt,
             size = 64.dp,
-            onClick = { /* TODO: Take photo */ }
+            onClick = onTakePhoto
         )
         
         // Effects/Filters Button (spiral icon placeholder)
@@ -231,22 +230,53 @@ fun ScanBottomSection(navController: NavController) {
 }
 
 // Camera Permission and functionality would be implemented here
+@OptIn(ExperimentalPermissionsApi::class)
 @Composable
-fun CameraPreview() {
-    // TODO: Implement actual camera preview using CameraX
-    // This would require camera permissions and CameraX dependencies
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.Black),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = "Camera Preview\n(Requires CameraX implementation)",
-            color = Color.White,
-            fontSize = 16.sp,
-            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+fun CameraPreviewView() {
+    val context = LocalContext.current
+    val cameraManager = remember { CameraManager(context) }
+    val cameraProviderFuture = remember { ProcessCameraProvider.getInstance(context) }
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    val cameraPermissionState = rememberPermissionState(
+        permission = android.Manifest.permission.CAMERA
+    )
+
+    LaunchedEffect(cameraPermissionState.status.isGranted) {
+        if (!cameraPermissionState.status.isGranted) {
+            cameraPermissionState.launchPermissionRequest()
+        }
+    }
+
+    if (cameraPermissionState.status.isGranted) {
+        AndroidView(
+            factory = { ctx ->
+                val previewView = PreviewView(ctx)
+                previewView.scaleType = PreviewView.ScaleType.FILL_CENTER
+
+                cameraProviderFuture.addListener({
+                    val cameraProvider = cameraProviderFuture.get()
+                    val preview = CameraPreview.Builder().build().also {
+                        it.setSurfaceProvider(previewView.surfaceProvider)
+                    }
+                    cameraManager.bindCameraUseCases(
+                        cameraProvider = cameraProvider,
+                        preview = preview,
+                        lifecycleOwner = lifecycleOwner
+                    )
+                }, ContextCompat.getMainExecutor(ctx))
+
+                return@AndroidView previewView
+            },
+            modifier = Modifier.fillMaxSize()
         )
+    } else {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Text("Camera permission not granted.", color = Color.White)
+        }
     }
 }
 
