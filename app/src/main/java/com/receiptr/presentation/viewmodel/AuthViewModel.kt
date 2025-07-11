@@ -101,20 +101,56 @@ class AuthViewModel @Inject constructor(
             val result = loginWithPhoneUseCase(phoneNumber, activity)
             _authResult.value = result
             
-            // If OTP was sent successfully, set verification ID (Firebase stores it internally)
+            // Check if OTP was sent successfully or auto-verified
             if (result is AuthResult.Success) {
-                _verificationId.value = "otp_sent" // Just a flag to indicate OTP was sent
+                when (result.user?.id) {
+                    "otp_sent" -> {
+                        _verificationId.value = "otp_sent"
+                    }
+                    "auto_verified" -> {
+                        // Auto verification completed, user is already signed in
+                        _verificationId.value = null
+                    }
+                    else -> {
+                        // Normal successful verification
+                        _verificationId.value = null
+                    }
+                }
             }
         }
     }
     
     fun verifyOtp(code: String) {
-        val verificationId = _verificationId.value
-        if (verificationId != null) {
-            viewModelScope.launch {
-                _authResult.value = AuthResult.Loading
-                // Pass empty string as verificationId since Firebase stores it internally
-                _authResult.value = loginWithPhoneUseCase.verifyOtp("", code)
+        viewModelScope.launch {
+            _authResult.value = AuthResult.Loading
+            // Pass empty string as verificationId since Firebase stores it internally
+            val result = loginWithPhoneUseCase.verifyOtp("", code)
+            _authResult.value = result
+            
+            // Clear verification ID on successful verification
+            if (result is AuthResult.Success) {
+                _verificationId.value = null
+            }
+        }
+    }
+    
+    fun resendOtp(phoneNumber: String, activity: Activity) {
+        viewModelScope.launch {
+            _authResult.value = AuthResult.Loading
+            val result = loginWithPhoneUseCase.resendOtp(phoneNumber, activity)
+            _authResult.value = result
+            
+            // Update verification state based on result
+            if (result is AuthResult.Success) {
+                when (result.user?.id) {
+                    "otp_resent" -> {
+                        _verificationId.value = "otp_sent"
+                    }
+                    "auto_verified" -> {
+                        // Auto verification completed
+                        _verificationId.value = null
+                    }
+                }
             }
         }
     }

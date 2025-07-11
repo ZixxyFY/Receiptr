@@ -36,6 +36,10 @@ class AuthRepositoryImpl @Inject constructor(
         return firebaseAuthService.verifyPhoneNumber(verificationId, code)
     }
     
+    override suspend fun resendVerificationCode(phoneNumber: String, activity: Activity): AuthResult {
+        return firebaseAuthService.resendVerificationCode(phoneNumber, activity)
+    }
+    
     override suspend fun sendPasswordResetEmail(email: String): AuthResult {
         return firebaseAuthService.sendPasswordResetEmail(email)
     }

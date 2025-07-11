@@ -6,12 +6,16 @@ import com.receiptr.data.remote.FirebaseAuthService
 import com.receiptr.data.remote.FirebaseFirestoreService
 import com.receiptr.data.repository.AuthRepositoryImpl
 import com.receiptr.data.repository.UserRepositoryImpl
+import com.receiptr.data.repository.ReceiptRepositoryImpl
 import com.receiptr.domain.repository.AuthRepository
 import com.receiptr.domain.repository.UserRepository
+import com.receiptr.domain.repository.ReceiptRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import android.content.Context
 import javax.inject.Singleton
 
 @Module
@@ -55,5 +59,11 @@ object AppModule {
     @Singleton
     fun provideAuthRepository(firebaseAuthService: FirebaseAuthService): AuthRepository {
         return AuthRepositoryImpl(firebaseAuthService)
+    }
+    
+    @Provides
+    @Singleton
+    fun provideReceiptRepository(@ApplicationContext context: Context): ReceiptRepository {
+        return ReceiptRepositoryImpl(context)
     }
 }

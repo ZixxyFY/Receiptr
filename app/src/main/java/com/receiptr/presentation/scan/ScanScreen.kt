@@ -23,6 +23,8 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.receiptr.ui.theme.*
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 import androidx.camera.core.Preview as CameraPreview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
@@ -42,6 +44,19 @@ fun ScanScreen(
     var capturedImageUri by remember { mutableStateOf<Uri?>(null) }
     val context = LocalContext.current
     val cameraManager = remember { CameraManager(context) }
+    
+    // Photo launchers for camera and gallery
+    val photoLaunchers = PhotoManager.rememberPhotoLaunchers(
+        onPhotoSelected = { uri ->
+            capturedImageUri = uri
+            // Navigate to photo preview
+            val encodedUri = URLEncoder.encode(uri.toString(), StandardCharsets.UTF_8.toString())
+            navController.navigate("photo_preview/$encodedUri")
+        },
+        onError = { error ->
+            Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
+        }
+    )
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -53,25 +68,21 @@ fun ScanScreen(
             // Top Header with Close Button
             ScanTopAppBar(navController)
             
-            // Camera Viewfinder Area (placeholder)
+            // Camera Viewfinder Area
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
             ) {
-                CameraXView(
-                    onImageCaptured = { uri ->
-                        capturedImageUri = uri
-                        Toast.makeText(context, "Photo captured successfully!", Toast.LENGTH_SHORT).show()
-                    },
-                    onError = { exception ->
-                        Toast.makeText(context, "Error: ${exception.message}", Toast.LENGTH_SHORT).show()
-                    }
-                )
+                CameraPreviewView()
             }
             
-            // Bottom Section
-            ScanBottomSection(navController)
+            // Bottom Section with Photo Controls
+            ScanBottomSection(
+                navController = navController,
+                onCapturePhoto = { photoLaunchers.captureFromCamera() },
+                onSelectFromGallery = { photoLaunchers.selectFromGallery() }
+            )
         }
     }
 }
@@ -101,7 +112,8 @@ fun ScanTopAppBar(navController: NavController) {
 
 @Composable
 fun CameraControls(
-    onTakePhoto: () -> Unit = {}
+    onTakePhoto: () -> Unit = {},
+    onSelectFromGallery: () -> Unit = {}
 ) {
     Row(
         modifier = Modifier
@@ -114,7 +126,7 @@ fun CameraControls(
         CameraControlButton(
             icon = Icons.Outlined.Image,
             size = 40.dp,
-            onClick = { /* TODO: Open gallery */ }
+            onClick = onSelectFromGallery
         )
         
         // Main Camera Button (larger)
@@ -158,49 +170,21 @@ fun CameraControlButton(
 }
 
 @Composable
-fun ScanBottomSection(navController: NavController) {
+fun ScanBottomSection(
+    navController: NavController,
+    onCapturePhoto: () -> Unit,
+    onSelectFromGallery: () -> Unit
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        // Scan Receipt Button
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 20.dp),
-            horizontalArrangement = Arrangement.End
-        ) {
-            Button(
-                onClick = { 
-                    // TODO: Process scanned receipt
-                    // For now, navigate back to receipts
-                    navController.navigate("receipts") {
-                        popUpTo("scan") { inclusive = true }
-                    }
-                },
-                modifier = Modifier
-                    .height(56.dp)
-                    .widthIn(min = 160.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary
-                ),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Outlined.Receipt,
-                    contentDescription = "Receipt",
-                    modifier = Modifier.size(24.dp)
-                )
-                Spacer(modifier = Modifier.width(12.dp))
-                Text(
-                    text = "Scan Receipt",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-        }
+        // Camera Controls
+        CameraControls(
+            onTakePhoto = onCapturePhoto,
+            onSelectFromGallery = onSelectFromGallery
+        )
         
         // Bottom Sheet Handle (as in Figma)
         Box(

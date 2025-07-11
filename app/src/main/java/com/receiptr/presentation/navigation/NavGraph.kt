@@ -13,7 +13,11 @@ import com.receiptr.presentation.onboarding.WelcomeScreen
 import com.receiptr.presentation.profile.ProfileScreen
 import com.receiptr.presentation.receipts.ReceiptsScreen
 import com.receiptr.presentation.scan.ScanScreen
+import com.receiptr.presentation.scan.PhotoPreviewScreen
 import com.receiptr.presentation.settings.SettingsScreen
+import android.net.Uri
+import java.net.URLDecoder
+import java.nio.charset.StandardCharsets
 
 @Composable
 fun NavGraph(navController: NavHostController) {
@@ -119,6 +123,21 @@ fun NavGraph(navController: NavHostController) {
             popExitTransition = NavigationAnimationSpecs.modalExit()
         ) {
             ScanScreen(navController = navController)
+        }
+        
+        composable(
+            "photo_preview/{photoUri}",
+            enterTransition = NavigationAnimationSpecs.forwardSlide(),
+            exitTransition = NavigationAnimationSpecs.forwardSlideExit(),
+            popEnterTransition = NavigationAnimationSpecs.backwardSlide(),
+            popExitTransition = NavigationAnimationSpecs.backwardSlideExit()
+        ) { backStackEntry ->
+            val encodedUri = backStackEntry.arguments?.getString("photoUri") ?: ""
+            val decodedUri = URLDecoder.decode(encodedUri, StandardCharsets.UTF_8.toString())
+            PhotoPreviewScreen(
+                navController = navController,
+                photoUri = Uri.parse(decodedUri)
+            )
         }
         
         composable(

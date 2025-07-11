@@ -26,6 +26,9 @@ class FirebaseAuthService @Inject constructor(
     private var storedVerificationId: String? = null
     private var resendToken: PhoneAuthProvider.ForceResendingToken? = null
     
+    // Expose storedVerificationId for use in other layers
+    val currentVerificationId: String? get() = storedVerificationId
+    
     fun getCurrentUser(): Flow<User?> = callbackFlow {
         val listener = FirebaseAuth.AuthStateListener { auth ->
             trySend(auth.currentUser?.toUser())
@@ -105,6 +108,8 @@ class FirebaseAuthService @Inject constructor(
     
     suspend fun signInWithPhoneNumber(phoneNumber: String, activity: Activity): AuthResult {
         return suspendCancellableCoroutine { continuation ->
+            var isCompleted = false
+            
             val callbacks = object : PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
                 override fun onVerificationCompleted(credential: PhoneAuthCredential) {
                     // This callback will be invoked in two situations:
@@ -113,12 +118,38 @@ class FirebaseAuthService @Inject constructor(
                     // 2 - Auto-retrieval. On some devices Google Play services can automatically
                     //     detect the incoming verification SMS and perform verification without
                     //     user action.
-                    // For now, we'll treat this as successful verification
-                    continuation.resume(AuthResult.Success(User()))
+                    if (!isCompleted) {
+                        isCompleted = true
+                        // Attempt to sign in with the credential immediately
+                        firebaseAuth.signInWithCredential(credential)
+                            .addOnCompleteListener { task ->
+                                if (task.isSuccessful) {
+                                    val user = task.result?.user?.toUser() ?: User()
+                                    continuation.resume(AuthResult.Success(user))
+                                } else {
+                                    continuation.resume(AuthResult.Error(task.exception?.message ?: "Auto-verification failed"))
+                                }
+                            }
+                    }
                 }
                 
                 override fun onVerificationFailed(e: FirebaseException) {
-                    continuation.resume(AuthResult.Error(e.message ?: "Phone verification failed"))
+                    if (!isCompleted) {
+                        isCompleted = true
+                        val errorMessage = when (e) {
+                            is com.google.firebase.auth.FirebaseAuthInvalidCredentialsException -> {
+                                "Invalid phone number format. Please check and try again."
+                            }
+                            is com.google.firebase.FirebaseTooManyRequestsException -> {
+                                "Too many requests. Please try again later."
+                            }
+                            is com.google.firebase.FirebaseNetworkException -> {
+                                "Network error. Please check your connection and try again."
+                            }
+                            else -> e.message ?: "Phone verification failed. Please try again."
+                        }
+                        continuation.resume(AuthResult.Error(errorMessage))
+                    }
                 }
                 
                 override fun onCodeSent(
@@ -126,21 +157,41 @@ class FirebaseAuthService @Inject constructor(
                     token: PhoneAuthProvider.ForceResendingToken
                 ) {
                     // The SMS verification code has been sent to the provided phone number
-                    storedVerificationId = verificationId
-                    resendToken = token
-                    continuation.resume(AuthResult.Success(User())) // Indicate OTP sent successfully
+                    if (!isCompleted) {
+                        isCompleted = true
+                        storedVerificationId = verificationId
+                        resendToken = token
+                        // Return a special success result to indicate OTP was sent
+                        continuation.resume(AuthResult.Success(User(id = "otp_sent")))
+                    }
                 }
+            }
+            
+            // Validate phone number format before making the request
+            if (!isValidPhoneNumber(phoneNumber)) {
+                continuation.resume(AuthResult.Error("Please enter a valid phone number with country code (e.g., +1234567890)"))
+                return@suspendCancellableCoroutine
             }
             
             val options = PhoneAuthOptions.newBuilder(firebaseAuth)
                 .setPhoneNumber(phoneNumber)
-                .setTimeout(60L, TimeUnit.SECONDS)
+                .setTimeout(120L, TimeUnit.SECONDS) // Increased timeout to 2 minutes
                 .setActivity(activity)
                 .setCallbacks(callbacks)
                 .build()
             
             PhoneAuthProvider.verifyPhoneNumber(options)
+            
+            // Set up cancellation handling
+            continuation.invokeOnCancellation {
+                // Clean up if needed
+            }
         }
+    }
+    
+    private fun isValidPhoneNumber(phoneNumber: String): Boolean {
+        // Basic validation - should start with + and contain only digits and +
+        return phoneNumber.matches(Regex("^\\+[1-9]\\d{1,14}$"))
     }
     
     suspend fun verifyPhoneNumber(verificationId: String, code: String): AuthResult {
@@ -149,12 +200,20 @@ class FirebaseAuthService @Inject constructor(
             val actualVerificationId = if (verificationId.isNotBlank()) verificationId else storedVerificationId
             
             if (actualVerificationId.isNullOrBlank()) {
-                return AuthResult.Error("No verification ID available. Please request a new code.")
+                return AuthResult.Error("Verification session expired. Please request a new code.")
             }
             
             // Validate the code format
-            if (code.length != 6 || !code.all { it.isDigit() }) {
-                return AuthResult.Error("Please enter a valid 6-digit verification code")
+            if (code.isBlank()) {
+                return AuthResult.Error("Please enter the verification code")
+            }
+            
+            if (code.length != 6) {
+                return AuthResult.Error("Verification code must be 6 digits")
+            }
+            
+            if (!code.all { it.isDigit() }) {
+                return AuthResult.Error("Verification code must contain only numbers")
             }
             
             val credential = PhoneAuthProvider.getCredential(actualVerificationId, code)
@@ -163,6 +222,10 @@ class FirebaseAuthService @Inject constructor(
             
             if (firebaseUser != null) {
                 val user = firebaseUser.toUser()
+                
+                // Clear stored verification ID after successful verification
+                storedVerificationId = null
+                resendToken = null
                 
                 // Check if user exists in Firestore
                 val existsResult = userRepository.userExists(user.id)
@@ -182,20 +245,80 @@ class FirebaseAuthService @Inject constructor(
                     AuthResult.Success(user)
                 }
             } else {
-                AuthResult.Error("Phone verification failed")
+                AuthResult.Error("Authentication failed. Please try again.")
             }
         } catch (e: Exception) {
             // Handle specific Firebase Auth exceptions
             val errorMessage = when (e) {
                 is com.google.firebase.auth.FirebaseAuthInvalidCredentialsException -> {
-                    "Invalid verification code. Please try again."
+                    if (e.message?.contains("invalid verification code", ignoreCase = true) == true) {
+                        "Invalid verification code. Please check and try again."
+                    } else {
+                        "Invalid credentials. Please try again."
+                    }
                 }
                 is com.google.firebase.auth.FirebaseAuthException -> {
-                    "Verification failed: ${e.message}"
+                    when (e.errorCode) {
+                        "ERROR_SESSION_EXPIRED" -> "Verification session expired. Please request a new code."
+                        "ERROR_INVALID_VERIFICATION_CODE" -> "Invalid verification code. Please try again."
+                        else -> "Verification failed: ${e.message}"
+                    }
                 }
-                else -> e.message ?: "Phone verification failed"
+                is com.google.firebase.FirebaseNetworkException -> {
+                    "Network error. Please check your connection and try again."
+                }
+                else -> e.message ?: "Phone verification failed. Please try again."
             }
             AuthResult.Error(errorMessage)
+        }
+    }
+    
+    // Add method to resend OTP
+    suspend fun resendVerificationCode(phoneNumber: String, activity: Activity): AuthResult {
+        return if (resendToken != null) {
+            suspendCancellableCoroutine { continuation ->
+                var isCompleted = false
+                
+                val callbacks = object : PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
+                    override fun onVerificationCompleted(credential: PhoneAuthCredential) {
+                        if (!isCompleted) {
+                            isCompleted = true
+                            continuation.resume(AuthResult.Success(User(id = "auto_verified")))
+                        }
+                    }
+                    
+                    override fun onVerificationFailed(e: FirebaseException) {
+                        if (!isCompleted) {
+                            isCompleted = true
+                            continuation.resume(AuthResult.Error(e.message ?: "Resend failed"))
+                        }
+                    }
+                    
+                    override fun onCodeSent(
+                        verificationId: String,
+                        token: PhoneAuthProvider.ForceResendingToken
+                    ) {
+                        if (!isCompleted) {
+                            isCompleted = true
+                            storedVerificationId = verificationId
+                            resendToken = token
+                            continuation.resume(AuthResult.Success(User(id = "otp_resent")))
+                        }
+                    }
+                }
+                
+                val options = PhoneAuthOptions.newBuilder(firebaseAuth)
+                    .setPhoneNumber(phoneNumber)
+                    .setTimeout(120L, TimeUnit.SECONDS)
+                    .setActivity(activity)
+                    .setCallbacks(callbacks)
+                    .setForceResendingToken(resendToken!!)
+                    .build()
+                
+                PhoneAuthProvider.verifyPhoneNumber(options)
+            }
+        } else {
+            AuthResult.Error("Cannot resend at this time. Please try requesting a new code.")
         }
     }
     

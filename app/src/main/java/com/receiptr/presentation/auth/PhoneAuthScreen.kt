@@ -42,17 +42,41 @@ fun PhoneAuthScreen(
     
     // Handle authentication result
     LaunchedEffect(authResult) {
-        when (authResult) {
+        when (val result = authResult) {
             is AuthResult.Success -> {
-                if (!isOtpSent && verificationId != null) {
-                    // OTP was sent successfully
-                    isOtpSent = true
-                } else if (isOtpSent) {
-                    // Authentication successful
-                    navController.navigate("home") {
-                        popUpTo("phone_auth") { inclusive = true }
+                when (result.user?.id) {
+                    "otp_sent" -> {
+                        // OTP was sent successfully
+                        if (!isOtpSent) {
+                            isOtpSent = true
+                        }
                     }
-                    viewModel.clearAuthResult()
+                    "otp_resent" -> {
+                        // OTP was resent successfully
+                        if (!isOtpSent) {
+                            isOtpSent = true
+                        }
+                        // Show success message
+                        // Could add a toast here if needed
+                    }
+                    "auto_verified", null -> {
+                        // Authentication successful (auto-verified or manual verification)
+                        if (isOtpSent || result.user?.id == "auto_verified") {
+                            navController.navigate("home") {
+                                popUpTo("phone_auth") { inclusive = true }
+                            }
+                            viewModel.clearAuthResult()
+                        }
+                    }
+                    else -> {
+                        // Normal successful authentication
+                        if (isOtpSent) {
+                            navController.navigate("home") {
+                                popUpTo("phone_auth") { inclusive = true }
+                            }
+                            viewModel.clearAuthResult()
+                        }
+                    }
                 }
             }
             else -> {}
@@ -110,7 +134,11 @@ fun PhoneAuthScreen(
             // Phone Number Input
             OutlinedTextField(
                 value = phoneNumber,
-                onValueChange = { phoneNumber = it },
+                onValueChange = { newValue ->
+                    // Allow only digits, plus sign, and spaces
+                    val filtered = newValue.filter { it.isDigit() || it == '+' || it == ' ' || it == '(' || it == ')' || it == '-' }
+                    phoneNumber = filtered
+                },
                 label = { Text("Phone Number") },
                 leadingIcon = {
                     Icon(
@@ -122,12 +150,22 @@ fun PhoneAuthScreen(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
                 singleLine = true,
-                placeholder = { Text("+1 (555) 123-4567") },
+                placeholder = { Text("+1234567890") },
+                supportingText = {
+                    Text(
+                        text = "Include country code (e.g., +1 for US)",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                },
+                isError = phoneNumber.isNotEmpty() && !isValidPhoneNumberFormat(phoneNumber),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = MaterialTheme.colorScheme.primary,
                     unfocusedBorderColor = MaterialTheme.colorScheme.outline,
                     focusedLabelColor = MaterialTheme.colorScheme.primary,
-                    unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant
+                    unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    errorBorderColor = MaterialTheme.colorScheme.error,
+                    errorLabelColor = MaterialTheme.colorScheme.error
                 )
             )
             
@@ -142,7 +180,7 @@ fun PhoneAuthScreen(
                     .fillMaxWidth()
                     .height(56.dp),
                 shape = RoundedCornerShape(12.dp),
-                enabled = phoneNumber.isNotEmpty() && authResult !is AuthResult.Loading,
+                enabled = phoneNumber.isNotEmpty() && isValidPhoneNumberFormat(phoneNumber) && authResult !is AuthResult.Loading,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = MaterialTheme.colorScheme.onPrimary,
@@ -241,13 +279,17 @@ fun PhoneAuthScreen(
             // Resend Code Button
             TextButton(
                 onClick = {
-                    viewModel.signInWithPhone(phoneNumber, activity)
+                    viewModel.resendOtp(phoneNumber, activity)
                 },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                enabled = authResult !is AuthResult.Loading
             ) {
                 Text(
-                    text = "Didn't receive the code? Resend",
-                    color = MaterialTheme.colorScheme.primary
+                    text = if (authResult is AuthResult.Loading) "Sending..." else "Didn't receive the code? Resend",
+                    color = if (authResult is AuthResult.Loading) 
+                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                    else 
+                        MaterialTheme.colorScheme.primary
                 )
             }
             
@@ -300,6 +342,15 @@ fun PhoneAuthScreen(
                 .padding(horizontal = 16.dp)
         )
     }
+}
+
+// Helper function to validate phone number format
+fun isValidPhoneNumberFormat(phoneNumber: String): Boolean {
+    // Remove all non-digit characters except +
+    val cleaned = phoneNumber.replace(Regex("[^+\\d]"), "")
+    
+    // Basic validation - should start with + and have at least 10 digits
+    return cleaned.matches(Regex("^\\+[1-9]\\d{9,14}$"))
 }
 
 @Preview(showBackground = true)
