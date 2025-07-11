@@ -1,6 +1,8 @@
 package com.receiptr.presentation.home
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -19,6 +21,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -28,6 +32,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.receiptr.R
 import com.receiptr.domain.model.AuthState
 import com.receiptr.domain.model.UiState
 import com.receiptr.presentation.viewmodel.AuthViewModel
@@ -97,11 +102,11 @@ fun HomeScreen(
             // Top Header
             TopAppBar(
                 title = {
-                    Text(
-                        text = "Receiptr",
-                        color = MaterialTheme.colorScheme.onBackground,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold
+                    Image(
+                        painter = painterResource(id = R.drawable.receiptr_logo),
+                        contentDescription = "Receiptr Logo",
+                        modifier = Modifier.height(32.dp),
+                        contentScale = ContentScale.Fit
                     )
                 },
                 actions = {

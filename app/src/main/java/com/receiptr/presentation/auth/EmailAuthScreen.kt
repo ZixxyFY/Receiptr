@@ -1,5 +1,6 @@
 package com.receiptr.presentation.auth
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -13,6 +14,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -24,6 +27,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.receiptr.R
 import com.receiptr.domain.model.AuthResult
 import com.receiptr.presentation.viewmodel.AuthViewModel
 import com.receiptr.ui.theme.ReceiptrTheme
@@ -79,6 +83,18 @@ fun EmailAuthScreen(
         }
         
         Spacer(modifier = Modifier.height(32.dp))
+        
+        // Logo
+        Image(
+            painter = painterResource(id = R.drawable.receiptr_logo),
+            contentDescription = "Receiptr Logo",
+            modifier = Modifier
+                .size(80.dp)
+                .align(Alignment.CenterHorizontally),
+            contentScale = ContentScale.Fit
+        )
+        
+        Spacer(modifier = Modifier.height(16.dp))
         
         Text(
             text = if (isSignUpMode) "Join Receiptr" else "Welcome Back",

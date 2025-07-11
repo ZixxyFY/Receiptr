@@ -52,13 +52,13 @@ fun WelcomeScreen(
             // Top Header
             TopAppBar(
                 title = {
-                    Text(
-                        text = "Receiptr",
-                        color = MaterialTheme.colorScheme.onBackground,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.fillMaxWidth(),
-                        textAlign = TextAlign.Center
+                    Image(
+                        painter = painterResource(id = R.drawable.receiptr_logo),
+                        contentDescription = "Receiptr Logo",
+                        modifier = Modifier
+                            .height(32.dp)
+                            .fillMaxWidth(),
+                        contentScale = ContentScale.Fit
                     )
                 },
                 actions = {

@@ -158,7 +158,10 @@ class AuthViewModel @Inject constructor(
     fun signOut() {
         viewModelScope.launch {
             authRepository.signOut()
+            _currentUser.value = null
             _authState.value = AuthState.Unauthenticated
+            _authResult.value = null
+            _verificationId.value = null
         }
     }
     
