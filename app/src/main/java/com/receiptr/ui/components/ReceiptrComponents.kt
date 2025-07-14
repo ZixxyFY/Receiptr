@@ -170,6 +170,7 @@ fun ReceiptrOutlinedButton(
 @Composable
 fun ReceiptrCard(
     modifier: Modifier = Modifier,
+    padding: PaddingValues = PaddingValues(24.dp),
     content: @Composable ColumnScope.() -> Unit
 ) {
     Card(
@@ -184,7 +185,7 @@ fun ReceiptrCard(
         )
     ) {
         Column(
-            modifier = Modifier.padding(24.dp),
+            modifier = Modifier.padding(padding),
             content = content
         )
     }

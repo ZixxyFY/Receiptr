@@ -86,32 +86,35 @@ fun LoginScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
+            // Logo Section
             Image(
                 painter = painterResource(id = R.drawable.receiptr_logo),
                 contentDescription = "Receiptr Logo",
                 modifier = Modifier.size(120.dp),
                 contentScale = ContentScale.Fit
             )
-        
-        Spacer(modifier = Modifier.height(16.dp))
-        
+            
+            Spacer(modifier = Modifier.height(24.dp))
+            
+            // Welcome Text Section
             Text(
                 text = "Welcome Back",
                 style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Medium,
+                fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onBackground,
                 textAlign = TextAlign.Center
             )
-        
-        Spacer(modifier = Modifier.height(8.dp))
-        
-        ReceiptrBodyText(
-            text = "Your AI-powered expense tracking companion",
-            textAlign = TextAlign.Center
-        )
-        
-        Spacer(modifier = Modifier.height(48.dp))
-        
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            ReceiptrBodyText(
+                text = "Your AI-powered expense tracking companion",
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(horizontal = 16.dp)
+            )
+            
+            Spacer(modifier = Modifier.height(48.dp))
+            // Authentication Buttons Section
             Button(
                 onClick = {
                     val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
@@ -135,26 +138,26 @@ fun LoginScreen(
                     pressedElevation = 4.dp
                 )
             ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_google),
-                    contentDescription = "Google",
-                    modifier = Modifier.size(20.dp)
-                )
-                Spacer(modifier = Modifier.width(12.dp))
-                Text(
-                    text = "Continue with Google",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Medium
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_google),
+                        contentDescription = "Google",
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text(
+                        text = "Continue with Google",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
             }
-        }
-        
-        Spacer(modifier = Modifier.height(16.dp))
-        
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
             OutlinedButton(
                 onClick = { navController.navigate("email_auth") },
                 modifier = Modifier

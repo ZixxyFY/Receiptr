@@ -94,6 +94,9 @@ dependencies {
     // Image loading
     implementation("io.coil-kt:coil-compose:2.5.0")
     
+    // Google ML Kit Text Recognition v2
+    implementation("com.google.mlkit:text-recognition:16.0.0")
+    
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

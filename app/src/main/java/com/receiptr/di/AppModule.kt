@@ -10,6 +10,8 @@ import com.receiptr.data.repository.ReceiptRepositoryImpl
 import com.receiptr.domain.repository.AuthRepository
 import com.receiptr.domain.repository.UserRepository
 import com.receiptr.domain.repository.ReceiptRepository
+import com.receiptr.data.ml.TextRecognitionService
+import com.receiptr.data.ml.ReceiptParserService
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -65,5 +67,17 @@ object AppModule {
     @Singleton
     fun provideReceiptRepository(@ApplicationContext context: Context): ReceiptRepository {
         return ReceiptRepositoryImpl(context)
+    }
+    
+    @Provides
+    @Singleton
+    fun provideTextRecognitionService(@ApplicationContext context: Context): TextRecognitionService {
+        return TextRecognitionService(context)
+    }
+    
+    @Provides
+    @Singleton
+    fun provideReceiptParserService(): ReceiptParserService {
+        return ReceiptParserService()
     }
 }

@@ -345,7 +345,7 @@ fun QuickActionCard(action: QuickAction) {
         modifier = Modifier
             .width(100.dp)
             .height(100.dp),
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
@@ -355,7 +355,7 @@ fun QuickActionCard(action: QuickAction) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(12.dp),
+                .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
@@ -363,19 +363,20 @@ fun QuickActionCard(action: QuickAction) {
                 imageVector = action.icon,
                 contentDescription = action.title,
                 tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(32.dp)
+                modifier = Modifier.size(28.dp)
             )
             
             Spacer(modifier = Modifier.height(8.dp))
             
             Text(
                 text = action.title,
-                fontSize = 12.sp,
+                fontSize = 11.sp,
                 fontWeight = FontWeight.Medium,
                 color = MaterialTheme.colorScheme.onSurface,
                 textAlign = TextAlign.Center,
                 maxLines = 2,
-                overflow = TextOverflow.Ellipsis
+                overflow = TextOverflow.Ellipsis,
+                lineHeight = 14.sp
             )
         }
     }
@@ -406,12 +407,16 @@ fun RecentReceiptsSection(receipts: List<ReceiptItem>, navController: NavControl
             }
         }
         
+        Spacer(modifier = Modifier.height(12.dp))
+        
         if (receipts.isEmpty()) {
             EmptyReceiptsCard()
         } else {
-            receipts.take(3).forEach { receipt ->
+            receipts.take(3).forEachIndexed { index, receipt ->
                 ReceiptItemCard(receipt)
-                Spacer(modifier = Modifier.height(8.dp))
+                if (index < receipts.take(3).size - 1) {
+                    Spacer(modifier = Modifier.height(12.dp))
+                }
             }
         }
     }
