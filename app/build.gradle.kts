@@ -61,6 +61,7 @@ dependencies {
     implementation(platform("com.google.firebase:firebase-bom:32.7.0"))
     implementation("com.google.firebase:firebase-auth-ktx")
     implementation("com.google.firebase:firebase-firestore-ktx")
+    implementation("com.google.firebase:firebase-storage-ktx")
     implementation("com.google.firebase:firebase-analytics-ktx")
     
     // Google Sign-In
@@ -96,6 +97,13 @@ dependencies {
     
     // Google ML Kit Text Recognition v2
     implementation("com.google.mlkit:text-recognition:16.0.0")
+    
+    // OpenCV for advanced image processing
+    // Note: OpenCV Android should be added manually as a module or use alternative
+    // implementation("org.opencv:opencv-android:4.8.0") // Not available in public repos
+    
+    // Alternative: Use OpenCV4Android from a different source or add as module
+    // For now, we'll comment this out and use basic Android image processing
     
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

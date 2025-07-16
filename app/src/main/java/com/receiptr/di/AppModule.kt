@@ -2,6 +2,7 @@ package com.receiptr.di
 
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.storage.FirebaseStorage
 import com.receiptr.data.remote.FirebaseAuthService
 import com.receiptr.data.remote.FirebaseFirestoreService
 import com.receiptr.data.repository.AuthRepositoryImpl
@@ -12,6 +13,9 @@ import com.receiptr.domain.repository.UserRepository
 import com.receiptr.domain.repository.ReceiptRepository
 import com.receiptr.data.ml.TextRecognitionService
 import com.receiptr.data.ml.ReceiptParserService
+import com.receiptr.data.ml.enhanced.ReceiptCategorizationService
+import com.receiptr.data.analytics.ReceiptAnalyticsService
+import com.receiptr.data.sync.ReceiptSyncService
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -65,8 +69,18 @@ object AppModule {
     
     @Provides
     @Singleton
-    fun provideReceiptRepository(@ApplicationContext context: Context): ReceiptRepository {
-        return ReceiptRepositoryImpl(context)
+    fun provideFirebaseStorage(): FirebaseStorage {
+        return FirebaseStorage.getInstance()
+    }
+
+    @Provides
+    @Singleton
+    fun provideReceiptRepository(
+        @ApplicationContext context: Context,
+        firestore: FirebaseFirestore,
+        storage: FirebaseStorage
+    ): ReceiptRepository {
+        return ReceiptRepositoryImpl(context, firestore, storage)
     }
     
     @Provides
@@ -79,5 +93,22 @@ object AppModule {
     @Singleton
     fun provideReceiptParserService(): ReceiptParserService {
         return ReceiptParserService()
+    }
+    
+    @Provides
+    @Singleton
+    fun provideReceiptAnalyticsService(
+        receiptRepository: ReceiptRepository
+    ): ReceiptAnalyticsService {
+        return ReceiptAnalyticsService(receiptRepository)
+    }
+    
+    @Provides
+    @Singleton
+    fun provideReceiptSyncService(
+        receiptRepository: ReceiptRepository,
+        analyticsService: ReceiptAnalyticsService
+    ): ReceiptSyncService {
+        return ReceiptSyncService(receiptRepository, analyticsService)
     }
 }

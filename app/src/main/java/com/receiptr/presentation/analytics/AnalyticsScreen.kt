@@ -11,6 +11,7 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material.icons.automirrored.outlined.*
 import androidx.compose.material3.*
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -22,8 +23,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.receiptr.domain.model.UiState
+import com.receiptr.presentation.viewmodel.AnalyticsViewModel
 import com.receiptr.ui.components.SkeletonAnalyticsContent
 import com.receiptr.ui.theme.*
 
@@ -40,25 +44,16 @@ data class CategoryData(
     val percentage: Float // 0.0 to 1.0 for bar width
 )
 
-enum class TimePeriod(val displayName: String) {
-    WEEKLY("Weekly"),
-    MONTHLY("Monthly"),
-    YEARLY("Yearly")
-}
+// TimePeriod enum is now in AnalyticsViewModel.kt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AnalyticsScreen(
-    navController: NavController
+    navController: NavController,
+    viewModel: AnalyticsViewModel = hiltViewModel()
 ) {
-    var selectedPeriod by remember { mutableStateOf(TimePeriod.MONTHLY) }
-    var isLoading by remember { mutableStateOf(true) }
-    
-    // Simulate loading delay
-    LaunchedEffect(Unit) {
-        kotlinx.coroutines.delay(1800) // 1.8 second delay
-        isLoading = false
-    }
+    val analyticsState by viewModel.analyticsState.collectAsState()
+    val selectedPeriod by viewModel.selectedPeriod.collectAsState()
     
     // Sample data
     val monthlyData = remember {
@@ -95,32 +90,61 @@ fun AnalyticsScreen(
             AnalyticsTopAppBar(navController)
             
             // Content with loading state
-            if (isLoading) {
-                SkeletonAnalyticsContent()
-            } else {
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(bottom = 80.dp), // Space for bottom nav
-                    contentPadding = PaddingValues(bottom = 16.dp)
-                ) {
-                    item {
-                        // Time Period Selector
-                        TimePeriodSelector(
-                            selectedPeriod = selectedPeriod,
-                            onPeriodSelected = { selectedPeriod = it }
-                        )
-                    }
+            when (val currentState = analyticsState) {
+                is UiState.Loading, is UiState.Idle -> {
+                    SkeletonAnalyticsContent()
+                }
+                
+                is UiState.Success -> {
+                    val analyticsData = currentState.data
                     
-                    item {
-                        // Spending Overview Chart
-                        SpendingOverviewChart(monthlyData)
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(bottom = 80.dp), // Space for bottom nav
+                        contentPadding = PaddingValues(bottom = 16.dp)
+                    ) {
+                        item {
+                            // Time Period Selector
+                            TimePeriodSelector(
+                                selectedPeriod = selectedPeriod,
+                                onPeriodSelected = { period ->
+                                    viewModel.selectTimePeriod(period)
+                                }
+                            )
+                        }
+                        
+                        item {
+                            // Spending Overview Chart
+                            SpendingOverviewChart(
+                                totalAmount = analyticsData.spendingAnalytics.totalSpending,
+                                changeText = analyticsData.spendingAnalytics.spendingChange,
+                                monthlyData = analyticsData.monthlyTrends
+                            )
+                        }
+                        
+                        item {
+                            // Category Analysis
+                            CategoryAnalysisChart(
+                                totalAmount = analyticsData.spendingAnalytics.totalSpending,
+                                changeText = analyticsData.spendingAnalytics.spendingChange,
+                                categoryData = analyticsData.categoryBreakdown
+                            )
+                        }
                     }
-                    
-                    item {
-                        // Category Analysis
-                        CategoryAnalysisChart(categoryData)
-                    }
+                }
+                
+                is UiState.Error -> {
+                    ErrorAnalyticsContent(
+                        message = currentState.message,
+                        onRetry = { viewModel.refreshAnalytics() }
+                    )
+                }
+                
+                is UiState.Empty -> {
+                    EmptyAnalyticsContent(
+                        onRefresh = { viewModel.refreshAnalytics() }
+                    )
                 }
             }
         }
@@ -165,8 +189,8 @@ fun AnalyticsTopAppBar(navController: NavController) {
 
 @Composable
 fun TimePeriodSelector(
-    selectedPeriod: TimePeriod,
-    onPeriodSelected: (TimePeriod) -> Unit
+    selectedPeriod: com.receiptr.presentation.viewmodel.TimePeriod,
+    onPeriodSelected: (com.receiptr.presentation.viewmodel.TimePeriod) -> Unit
 ) {
     Card(
         modifier = Modifier
@@ -183,7 +207,7 @@ fun TimePeriodSelector(
                 .fillMaxWidth()
                 .padding(4.dp)
         ) {
-            TimePeriod.values().forEach { period ->
+            com.receiptr.presentation.viewmodel.TimePeriod.values().forEach { period ->
                 val isSelected = period == selectedPeriod
                 
                 Box(
@@ -213,7 +237,11 @@ fun TimePeriodSelector(
 }
 
 @Composable
-fun SpendingOverviewChart(data: List<MonthlyData>) {
+fun SpendingOverviewChart(
+    totalAmount: Double,
+    changeText: String,
+    monthlyData: List<com.receiptr.data.analytics.MonthlySpending>
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -240,7 +268,7 @@ fun SpendingOverviewChart(data: List<MonthlyData>) {
             Spacer(modifier = Modifier.height(8.dp))
             
             Text(
-                text = "$1,234",
+                text = "$${String.format("%.2f", totalAmount)}",
                 fontSize = 32.sp,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface
@@ -250,23 +278,83 @@ fun SpendingOverviewChart(data: List<MonthlyData>) {
             
             Row {
                 Text(
-                    text = "This month",
+                    text = changeText,
                     fontSize = 16.sp,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "+12%",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = Color(0xFF07882E) // Green color from Figma
                 )
             }
             
             Spacer(modifier = Modifier.height(24.dp))
             
             // Bar Chart
-            BarChart(data)
+            MonthlyBarChart(monthlyData)
+        }
+    }
+}
+
+@Composable
+fun MonthlyBarChart(monthlyData: List<com.receiptr.data.analytics.MonthlySpending>) {
+    if (monthlyData.isEmpty()) {
+        // Show empty state
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(180.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "No data available",
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+            )
+        }
+        return
+    }
+    
+    val maxAmount = monthlyData.maxOfOrNull { it.amount } ?: 1.0
+    
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(180.dp),
+        horizontalArrangement = Arrangement.SpaceEvenly
+    ) {
+        monthlyData.takeLast(7).forEach { monthData ->
+            Column(
+                modifier = Modifier.weight(1f),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                // Bar
+                Box(
+                    modifier = Modifier
+                        .width(24.dp)
+                        .weight(1f),
+                    contentAlignment = Alignment.BottomCenter
+                ) {
+                    val percentage = if (maxAmount > 0) (monthData.amount / maxAmount).toFloat() else 0f
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .fillMaxHeight(percentage)
+                            .clip(RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp))
+                            .background(MaterialTheme.colorScheme.primaryContainer)
+                            .border(
+                                width = 2.dp,
+                                color = MaterialTheme.colorScheme.primary,
+                                shape = RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp)
+                            )
+                    )
+                }
+                
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                // Month Label
+                Text(
+                    text = monthData.month.takeLast(3), // Show last 3 chars (like "Jan")
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                )
+            }
         }
     }
 }
@@ -320,7 +408,11 @@ fun BarChart(data: List<MonthlyData>) {
 }
 
 @Composable
-fun CategoryAnalysisChart(data: List<CategoryData>) {
+fun CategoryAnalysisChart(
+    totalAmount: Double,
+    changeText: String,
+    categoryData: List<com.receiptr.data.analytics.CategorySpending>
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -359,7 +451,7 @@ fun CategoryAnalysisChart(data: List<CategoryData>) {
                 Spacer(modifier = Modifier.height(8.dp))
                 
                 Text(
-                    text = "$1,234",
+                    text = "$${String.format("%.2f", totalAmount)}",
                     fontSize = 32.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
@@ -369,23 +461,93 @@ fun CategoryAnalysisChart(data: List<CategoryData>) {
                 
                 Row {
                     Text(
-                        text = "This month",
+                        text = changeText,
                         fontSize = 16.sp,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "+12%",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = Color(0xFF07882E)
                     )
                 }
                 
                 Spacer(modifier = Modifier.height(24.dp))
                 
                 // Horizontal Bar Chart
-                HorizontalBarChart(data)
+                CategoryBarChart(categoryData)
+            }
+        }
+    }
+}
+
+@Composable
+fun CategoryBarChart(categoryData: List<com.receiptr.data.analytics.CategorySpending>) {
+    if (categoryData.isEmpty()) {
+        // Show empty state
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(120.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "No category data available",
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+            )
+        }
+        return
+    }
+    
+    val maxAmount = categoryData.maxOfOrNull { it.amount } ?: 1.0
+    
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        categoryData.take(5).forEach { categorySpending ->
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Category Label
+                Text(
+                    text = categorySpending.category.displayName,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                    modifier = Modifier.width(80.dp)
+                )
+                
+                Spacer(modifier = Modifier.width(16.dp))
+                
+                // Bar
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(16.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(Color.Transparent)
+                ) {
+                    val percentage = if (maxAmount > 0) (categorySpending.amount / maxAmount).toFloat() else 0f
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth(percentage)
+                            .fillMaxHeight()
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(MaterialTheme.colorScheme.primaryContainer)
+                            .border(
+                                width = 2.dp,
+                                color = MaterialTheme.colorScheme.primary,
+                                shape = RoundedCornerShape(8.dp)
+                            )
+                    )
+                }
+                
+                Spacer(modifier = Modifier.width(8.dp))
+                
+                // Amount
+                Text(
+                    text = "$${String.format("%.0f", categorySpending.amount)}",
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
             }
         }
     }
@@ -521,6 +683,105 @@ fun AnalyticsNavigationItem(
             color = if (isActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
             textAlign = TextAlign.Center
         )
+    }
+}
+
+@Composable
+fun ErrorAnalyticsContent(
+    message: String,
+    onRetry: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Icon(
+            imageVector = Icons.Outlined.ErrorOutline,
+            contentDescription = "Error",
+            tint = MaterialTheme.colorScheme.error,
+            modifier = Modifier.size(64.dp)
+        )
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        Text(
+            text = "Something went wrong",
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onBackground
+        )
+        
+        Spacer(modifier = Modifier.height(8.dp))
+        
+        Text(
+            text = message,
+            fontSize = 14.sp,
+            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
+            textAlign = TextAlign.Center
+        )
+        
+        Spacer(modifier = Modifier.height(24.dp))
+        
+        Button(
+            onClick = onRetry,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.primary
+            )
+        ) {
+            Text("Try Again")
+        }
+    }
+}
+
+@Composable
+fun EmptyAnalyticsContent(
+    onRefresh: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Icon(
+            imageVector = Icons.Outlined.Analytics,
+            contentDescription = "No data",
+            tint = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f),
+            modifier = Modifier.size(64.dp)
+        )
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        Text(
+            text = "No analytics data",
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onBackground
+        )
+        
+        Spacer(modifier = Modifier.height(8.dp))
+        
+        Text(
+            text = "Start by adding some receipts to see your spending insights",
+            fontSize = 14.sp,
+            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
+            textAlign = TextAlign.Center
+        )
+        
+        Spacer(modifier = Modifier.height(24.dp))
+        
+        Button(
+            onClick = onRefresh,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.primary
+            )
+        ) {
+            Text("Refresh")
+        }
     }
 }
 

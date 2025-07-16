@@ -2,6 +2,7 @@ package com.receiptr.data.ml
 
 import android.graphics.Point
 import android.graphics.Rect
+import com.receiptr.data.ml.models.ReceiptCategory
 
 /**
  * Data models for text recognition results
@@ -48,6 +49,7 @@ data class ReceiptData(
     val tax: String? = null,
     val total: String? = null,
     val paymentMethod: String? = null,
+    val category: ReceiptCategory = ReceiptCategory.OTHER,
     val rawText: String = ""
 )
 

@@ -68,19 +68,28 @@ fun ScanScreen(
             // Top Header with Close Button
             ScanTopAppBar(navController)
             
-            // Camera Viewfinder Area
+    // Camera Viewfinder Area
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
             ) {
-                CameraPreviewView()
+                CameraPreviewView(
+                    onImageCaptured = { uri ->
+                        capturedImageUri = uri
+                        // Navigate to photo preview
+                        val encodedUri = URLEncoder.encode(uri.toString(), StandardCharsets.UTF_8.toString())
+                        navController.navigate("photo_preview/$encodedUri")
+                    },
+                    onError = { error ->
+                        Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
+                    }
+                )
             }
             
-            // Bottom Section with Photo Controls
+            // Bottom Section with Gallery Selection
             ScanBottomSection(
                 navController = navController,
-                onCapturePhoto = { photoLaunchers.captureFromCamera() },
                 onSelectFromGallery = { photoLaunchers.selectFromGallery() }
             )
         }
@@ -110,40 +119,6 @@ fun ScanTopAppBar(navController: NavController) {
     )
 }
 
-@Composable
-fun CameraControls(
-    onTakePhoto: () -> Unit = {},
-    onSelectFromGallery: () -> Unit = {}
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 24.dp),
-        horizontalArrangement = Arrangement.SpaceEvenly,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        // Gallery Button
-        CameraControlButton(
-            icon = Icons.Outlined.Image,
-            size = 40.dp,
-            onClick = onSelectFromGallery
-        )
-        
-        // Main Camera Button (larger)
-        CameraControlButton(
-            icon = Icons.Filled.CameraAlt,
-            size = 64.dp,
-            onClick = onTakePhoto
-        )
-        
-        // Effects/Filters Button (spiral icon placeholder)
-        CameraControlButton(
-            icon = Icons.Outlined.Tune, // Using tune icon as spiral placeholder
-            size = 40.dp,
-            onClick = { /* TODO: Open effects */ }
-        )
-    }
-}
 
 @Composable
 fun CameraControlButton(
@@ -172,7 +147,6 @@ fun CameraControlButton(
 @Composable
 fun ScanBottomSection(
     navController: NavController,
-    onCapturePhoto: () -> Unit,
     onSelectFromGallery: () -> Unit
 ) {
     Column(
@@ -180,11 +154,34 @@ fun ScanBottomSection(
             .fillMaxWidth()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        // Camera Controls
-        CameraControls(
-            onTakePhoto = onCapturePhoto,
-            onSelectFromGallery = onSelectFromGallery
-        )
+        // Gallery Selection
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            OutlinedButton(
+                onClick = onSelectFromGallery,
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = MaterialTheme.colorScheme.primary
+                ),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Image,
+                    contentDescription = "Gallery",
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Select from Gallery",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Medium
+                )
+            }
+        }
         
         // Bottom Sheet Handle (as in Figma)
         Box(
@@ -216,11 +213,15 @@ fun ScanBottomSection(
 // Camera Permission and functionality would be implemented here
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
-fun CameraPreviewView() {
+fun CameraPreviewView(
+    onImageCaptured: (Uri) -> Unit,
+    onError: (String) -> Unit
+) {
     val context = LocalContext.current
     val cameraManager = remember { CameraManager(context) }
     val cameraProviderFuture = remember { ProcessCameraProvider.getInstance(context) }
     val lifecycleOwner = LocalLifecycleOwner.current
+    var isCapturing by remember { mutableStateOf(false) }
 
     val cameraPermissionState = rememberPermissionState(
         permission = android.Manifest.permission.CAMERA
@@ -233,33 +234,103 @@ fun CameraPreviewView() {
     }
 
     if (cameraPermissionState.status.isGranted) {
-        AndroidView(
-            factory = { ctx ->
-                val previewView = PreviewView(ctx)
-                previewView.scaleType = PreviewView.ScaleType.FILL_CENTER
-
-                cameraProviderFuture.addListener({
-                    val cameraProvider = cameraProviderFuture.get()
-                    val preview = CameraPreview.Builder().build().also {
-                        it.setSurfaceProvider(previewView.surfaceProvider)
-                    }
-                    cameraManager.bindCameraUseCases(
-                        cameraProvider = cameraProvider,
-                        preview = preview,
-                        lifecycleOwner = lifecycleOwner
-                    )
-                }, ContextCompat.getMainExecutor(ctx))
-
-                return@AndroidView previewView
-            },
+        Box(
             modifier = Modifier.fillMaxSize()
-        )
+        ) {
+            AndroidView(
+                factory = { ctx ->
+                    val previewView = PreviewView(ctx)
+                    previewView.scaleType = PreviewView.ScaleType.FILL_CENTER
+
+                    cameraProviderFuture.addListener({
+                        val cameraProvider = cameraProviderFuture.get()
+                        val preview = CameraPreview.Builder().build().also {
+                            it.setSurfaceProvider(previewView.surfaceProvider)
+                        }
+                        cameraManager.bindCameraUseCases(
+                            cameraProvider = cameraProvider,
+                            preview = preview,
+                            lifecycleOwner = lifecycleOwner
+                        )
+                    }, ContextCompat.getMainExecutor(ctx))
+
+                    return@AndroidView previewView
+                },
+                modifier = Modifier.fillMaxSize()
+            )
+            
+            // Capture button overlay
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(32.dp)
+            ) {
+                Button(
+                    onClick = {
+                        if (!isCapturing) {
+                            isCapturing = true
+                            cameraManager.takePhoto(
+                                onImageCaptured = { uri ->
+                                    isCapturing = false
+                                    onImageCaptured(uri)
+                                },
+                                onError = { exception ->
+                                    isCapturing = false
+                                    onError(exception.message ?: "Failed to capture image")
+                                }
+                            )
+                        }
+                    },
+                    enabled = !isCapturing,
+                    modifier = Modifier.size(72.dp),
+                    shape = CircleShape,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (isCapturing) Color.Gray else Color.White,
+                        contentColor = MaterialTheme.colorScheme.primary
+                    )
+                ) {
+                    if (isCapturing) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            color = MaterialTheme.colorScheme.primary,
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Icon(
+                            imageVector = Icons.Filled.CameraAlt,
+                            contentDescription = "Capture",
+                            modifier = Modifier.size(32.dp)
+                        )
+                    }
+                }
+            }
+        }
     } else {
         Box(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
-            Text("Camera permission not granted.", color = Color.White)
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.CameraAlt,
+                    contentDescription = "Camera",
+                    modifier = Modifier.size(64.dp),
+                    tint = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f)
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = "Camera permission required",
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Button(
+                    onClick = { cameraPermissionState.launchPermissionRequest() }
+                ) {
+                    Text("Grant Permission")
+                }
+            }
         }
     }
 }

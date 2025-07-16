@@ -81,6 +81,11 @@ fun HomeScreen(
         }
     }
     
+    // Refresh data when screen is resumed
+    LaunchedEffect(Unit) {
+        homeViewModel.refreshHomeData()
+    }
+    
     // Quick actions (static data)
     val quickActions = remember {
         listOf(

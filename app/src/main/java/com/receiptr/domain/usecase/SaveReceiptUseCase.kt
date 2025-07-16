@@ -3,10 +3,12 @@ package com.receiptr.domain.usecase
 import android.net.Uri
 import com.receiptr.domain.model.Receipt
 import com.receiptr.domain.repository.ReceiptRepository
+import com.receiptr.data.sync.ReceiptSyncService
 import javax.inject.Inject
 
 class SaveReceiptUseCase @Inject constructor(
-    private val receiptRepository: ReceiptRepository
+    private val receiptRepository: ReceiptRepository,
+    private val syncService: ReceiptSyncService
 ) {
     suspend fun execute(
         userId: String,
@@ -44,7 +46,15 @@ class SaveReceiptUseCase @Inject constructor(
             )
             
             // Save receipt
-            receiptRepository.saveReceipt(receipt)
+            val saveResult = receiptRepository.saveReceipt(receipt)
+            
+            if (saveResult.isSuccess) {
+                // Notify sync service about new receipt
+                syncService.notifyReceiptAccepted(receipt)
+                Result.success(receiptId)
+            } else {
+                Result.failure(saveResult.exceptionOrNull() ?: Exception("Failed to save receipt"))
+            }
             
         } catch (e: Exception) {
             Result.failure(e)

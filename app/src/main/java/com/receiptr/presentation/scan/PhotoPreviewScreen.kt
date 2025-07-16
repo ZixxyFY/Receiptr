@@ -3,7 +3,9 @@ package com.receiptr.presentation.scan
 import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -15,6 +17,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -26,6 +29,8 @@ import com.receiptr.ui.theme.ReceiptrTheme
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.receiptr.presentation.viewmodel.PhotoPreviewViewModel
+import com.receiptr.data.ml.ReceiptData
+import com.receiptr.data.ml.models.ReceiptCategory
 import android.widget.Toast
 
 @Composable
@@ -37,10 +42,15 @@ fun PhotoPreviewScreen(
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     
+    // Start processing automatically when screen loads
+    LaunchedEffect(photoUri) {
+        viewModel.processReceiptImageFromUri(photoUri)
+    }
+    
     // Handle success state
     LaunchedEffect(uiState.receiptSaved) {
         if (uiState.receiptSaved) {
-            navController.navigate("receipts") {
+            navController.navigate("home") {
                 popUpTo("scan") { inclusive = true }
             }
         }
@@ -49,7 +59,6 @@ fun PhotoPreviewScreen(
     // Handle error state
     LaunchedEffect(uiState.error) {
         uiState.error?.let { error ->
-            // Show error toast or snackbar
             android.widget.Toast.makeText(context, error, android.widget.Toast.LENGTH_LONG).show()
             viewModel.clearError()
         }
@@ -71,38 +80,43 @@ fun PhotoPreviewScreen(
                 }
             )
             
-            // Photo Display
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-                    .padding(16.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                AsyncImage(
-                    model = ImageRequest.Builder(context)
-                        .data(photoUri)
-                        .crossfade(true)
-                        .build(),
-                    contentDescription = "Captured receipt photo",
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .clip(RoundedCornerShape(12.dp)),
-                    contentScale = ContentScale.Fit
-                )
-            }
-            
-            // Bottom Actions
-            PhotoPreviewBottomActions(
-                navController = navController,
-                isLoading = uiState.isLoading,
-                onProcessReceipt = {
-                    viewModel.saveReceipt(photoUri)
-                },
-                onRetakePhoto = {
-                    navController.navigateUp()
+            // Content based on processing state
+            when {
+                uiState.isProcessing -> {
+                    ProcessingView(photoUri = photoUri)
                 }
-            )
+                uiState.receiptData != null -> {
+                    ExtractedDataView(
+                        photoUri = photoUri,
+                        receiptData = uiState.receiptData!!,
+                        isLoading = uiState.isLoading,
+                        onSave = {
+                            viewModel.saveReceipt(
+                                photoUri = photoUri,
+                                merchantName = uiState.receiptData!!.merchantName ?: "",
+                                totalAmount = uiState.receiptData!!.total?.toDoubleOrNull() ?: 0.0,
+                                category = uiState.receiptData!!.category.displayName,
+                                notes = "Auto-processed receipt"
+                            )
+                        },
+                        onRetry = {
+                            viewModel.processReceiptImageFromUri(photoUri)
+                        }
+                    )
+                }
+                uiState.error != null -> {
+                    ErrorView(
+                        error = uiState.error!!,
+                        onRetry = {
+                            viewModel.processReceiptImageFromUri(photoUri)
+                        }
+                    )
+                }
+                else -> {
+                    // Show basic photo preview while waiting for processing to start
+                    ProcessingView(photoUri = photoUri)
+                }
+            }
         }
     }
 }
@@ -143,44 +157,193 @@ fun PhotoPreviewTopAppBar(
     )
 }
 
+// Helper functions from ReceiptPreviewScreen
 @Composable
-fun PhotoPreviewBottomActions(
-    navController: NavController,
-    isLoading: Boolean = false,
-    onProcessReceipt: () -> Unit,
-    onRetakePhoto: () -> Unit
-) {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        color = MaterialTheme.colorScheme.surface,
-        shadowElevation = 8.dp
+fun ProcessingView(photoUri: Uri) {
+    val context = LocalContext.current
+    
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        // Photo Preview
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(200.dp)
+                .padding(16.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            AsyncImage(
+                model = ImageRequest.Builder(context)
+                    .data(photoUri)
+                    .crossfade(true)
+                    .build(),
+                contentDescription = "Receipt photo",
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clip(RoundedCornerShape(12.dp)),
+                contentScale = ContentScale.Fit
+            )
+        }
+        
+        Spacer(modifier = Modifier.height(32.dp))
+        
+        // Processing indicator
+        CircularProgressIndicator(
+            modifier = Modifier.size(48.dp),
+            color = MaterialTheme.colorScheme.primary,
+            strokeWidth = 4.dp
+        )
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        Text(
+            text = "Processing Receipt...",
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Medium,
+            color = MaterialTheme.colorScheme.onBackground
+        )
+        
+        Spacer(modifier = Modifier.height(8.dp))
+        
+        Text(
+            text = "Extracting text and categorizing expenses",
+            fontSize = 14.sp,
+            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
+            textAlign = TextAlign.Center
+        )
+    }
+}
+
+@Composable
+fun ExtractedDataView(
+    photoUri: Uri,
+    receiptData: ReceiptData,
+    isLoading: Boolean,
+    onSave: () -> Unit,
+    onRetry: () -> Unit
+) {
+    val context = LocalContext.current
+    val scrollState = rememberScrollState()
+    
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(scrollState)
+    ) {
+        // Small photo preview
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(120.dp)
+                .padding(16.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            AsyncImage(
+                model = ImageRequest.Builder(context)
+                    .data(photoUri)
+                    .crossfade(true)
+                    .build(),
+                contentDescription = "Receipt photo",
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clip(RoundedCornerShape(8.dp)),
+                contentScale = ContentScale.Fit
+            )
+        }
+        
+        // Extracted data cards
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surface
+            )
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp)
+            ) {
+                Text(
+                    text = "Extracted Information",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                // Category
+                DataRow(
+                    label = "Category",
+                    value = receiptData.category.displayName,
+                    icon = Icons.Filled.Category
+                )
+                
+                // Merchant
+                receiptData.merchantName?.let { merchantName ->
+                    DataRow(
+                        label = "Merchant",
+                        value = merchantName,
+                        icon = Icons.Filled.Store
+                    )
+                }
+                
+                // Total
+                receiptData.total?.let { total ->
+                    DataRow(
+                        label = "Total",
+                        value = "$$total",
+                        icon = Icons.Filled.AttachMoney
+                    )
+                }
+                
+                // Date
+                receiptData.date?.let { date ->
+                    DataRow(
+                        label = "Date",
+                        value = date,
+                        icon = Icons.Filled.CalendarToday
+                    )
+                }
+                
+                // Payment Method
+                receiptData.paymentMethod?.let { paymentMethod ->
+                    DataRow(
+                        label = "Payment",
+                        value = paymentMethod,
+                        icon = Icons.Filled.Payment
+                    )
+                }
+            }
+        }
+        
+        // Action buttons
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            // Retake Photo Button
             OutlinedButton(
-                onClick = onRetakePhoto,
+                onClick = onRetry,
                 modifier = Modifier
                     .weight(1f)
-                    .height(50.dp),
+                    .height(48.dp),
                 colors = ButtonDefaults.outlinedButtonColors(
                     contentColor = MaterialTheme.colorScheme.primary
                 ),
                 shape = RoundedCornerShape(12.dp)
             ) {
                 Icon(
-                    imageVector = Icons.Filled.CameraAlt,
-                    contentDescription = "Retake",
-                    modifier = Modifier.size(20.dp)
+                    imageVector = Icons.Filled.Refresh,
+                    contentDescription = "Retry",
+                    modifier = Modifier.size(18.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "Retake",
+                    text = "Retry",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Medium
                 )
@@ -188,13 +351,12 @@ fun PhotoPreviewBottomActions(
             
             Spacer(modifier = Modifier.width(16.dp))
             
-            // Process Receipt Button
             Button(
-                onClick = onProcessReceipt,
+                onClick = onSave,
                 enabled = !isLoading,
                 modifier = Modifier
                     .weight(1f)
-                    .height(50.dp),
+                    .height(48.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary
                 ),
@@ -202,24 +364,124 @@ fun PhotoPreviewBottomActions(
             ) {
                 if (isLoading) {
                     CircularProgressIndicator(
-                        modifier = Modifier.size(20.dp),
+                        modifier = Modifier.size(18.dp),
                         color = MaterialTheme.colorScheme.onPrimary,
                         strokeWidth = 2.dp
                     )
                 } else {
                     Icon(
-                        imageVector = Icons.Filled.Receipt,
-                        contentDescription = "Process",
-                        modifier = Modifier.size(20.dp)
+                        imageVector = Icons.Filled.Save,
+                        contentDescription = "Save",
+                        modifier = Modifier.size(18.dp)
                     )
                 }
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = if (isLoading) "Processing..." else "Process",
+                    text = if (isLoading) "Saving..." else "Save Receipt",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold
                 )
             }
+        }
+    }
+}
+
+@Composable
+fun DataRow(
+    label: String,
+    value: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            modifier = Modifier.size(20.dp),
+            tint = MaterialTheme.colorScheme.primary
+        )
+        
+        Spacer(modifier = Modifier.width(12.dp))
+        
+        Column(
+            modifier = Modifier.weight(1f)
+        ) {
+            Text(
+                text = label,
+                fontSize = 12.sp,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+            )
+            Text(
+                text = value,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+        }
+    }
+}
+
+@Composable
+fun ErrorView(
+    error: String,
+    onRetry: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Icon(
+            imageVector = Icons.Filled.Error,
+            contentDescription = "Error",
+            modifier = Modifier.size(64.dp),
+            tint = MaterialTheme.colorScheme.error
+        )
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        Text(
+            text = "Processing Failed",
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onBackground
+        )
+        
+        Spacer(modifier = Modifier.height(8.dp))
+        
+        Text(
+            text = error,
+            fontSize = 14.sp,
+            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
+            textAlign = TextAlign.Center
+        )
+        
+        Spacer(modifier = Modifier.height(24.dp))
+        
+        Button(
+            onClick = onRetry,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.primary
+            ),
+            shape = RoundedCornerShape(12.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Filled.Refresh,
+                contentDescription = "Retry",
+                modifier = Modifier.size(18.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = "Try Again",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Medium
+            )
         }
     }
 }

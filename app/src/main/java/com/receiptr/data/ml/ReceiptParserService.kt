@@ -1,5 +1,8 @@
 package com.receiptr.data.ml
 
+import com.receiptr.data.ml.enhanced.ReceiptCategorizationService
+import com.receiptr.data.ml.enhanced.ReceiptCategory as EnhancedReceiptCategory
+import com.receiptr.data.ml.models.ReceiptCategory as ModelReceiptCategory
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.regex.Pattern
@@ -11,6 +14,7 @@ import javax.inject.Singleton
  */
 @Singleton
 class ReceiptParserService @Inject constructor() {
+    private val categorizationService = ReceiptCategorizationService()
     
     // Common regex patterns for receipt parsing
     private val pricePattern = Pattern.compile("\\$?\\d+\\.\\d{2}")
@@ -30,11 +34,13 @@ class ReceiptParserService @Inject constructor() {
     /**
      * Parses a receipt from recognized text
      */
-    fun parseReceipt(textResult: TextRecognitionResult): ReceiptData {
+fun parseReceipt(textResult: TextRecognitionResult): ReceiptData {
         val lines = textResult.fullText.split("\n").filter { it.isNotBlank() }
+        val merchantName = extractMerchantName(lines)
+        val category = classifyReceiptCategory(textResult.fullText, merchantName)
         
         return ReceiptData(
-            merchantName = extractMerchantName(lines),
+            merchantName = merchantName,
             merchantAddress = extractMerchantAddress(lines),
             phoneNumber = extractPhoneNumber(textResult.fullText),
             date = extractDate(textResult.fullText),
@@ -44,6 +50,7 @@ class ReceiptParserService @Inject constructor() {
             tax = extractTax(textResult.fullText),
             total = extractTotal(textResult.fullText),
             paymentMethod = extractPaymentMethod(lines),
+            category = category,
             rawText = textResult.fullText
         )
     }
@@ -202,5 +209,33 @@ class ReceiptParserService @Inject constructor() {
         }
         
         return null
+    }
+    
+    /**
+     * Classifies receipt category based on merchant name and text content
+     */
+    private fun classifyReceiptCategory(text: String, merchantName: String?): ModelReceiptCategory {
+        val receiptData = ReceiptData(
+            merchantName = merchantName,
+            rawText = text
+            // Add other extracted data as needed
+        )
+        val categoryResult = categorizationService.getDetailedCategorization(receiptData)
+        return when (categoryResult.primaryCategory) {
+            EnhancedReceiptCategory.GROCERIES -> ModelReceiptCategory.GROCERIES
+            EnhancedReceiptCategory.DINING -> ModelReceiptCategory.DINING
+            EnhancedReceiptCategory.TRANSPORTATION -> ModelReceiptCategory.TRANSPORTATION
+            EnhancedReceiptCategory.ELECTRONICS -> ModelReceiptCategory.ELECTRONICS
+            EnhancedReceiptCategory.CLOTHING -> ModelReceiptCategory.CLOTHING
+            EnhancedReceiptCategory.HEALTHCARE -> ModelReceiptCategory.HEALTHCARE
+            EnhancedReceiptCategory.ENTERTAINMENT -> ModelReceiptCategory.ENTERTAINMENT
+            EnhancedReceiptCategory.HOME_GARDEN -> ModelReceiptCategory.HOME_GARDEN
+            EnhancedReceiptCategory.AUTOMOTIVE -> ModelReceiptCategory.AUTOMOTIVE
+            EnhancedReceiptCategory.BUSINESS -> ModelReceiptCategory.BUSINESS
+            EnhancedReceiptCategory.TRAVEL -> ModelReceiptCategory.TRAVEL
+            EnhancedReceiptCategory.EDUCATION -> ModelReceiptCategory.EDUCATION
+            EnhancedReceiptCategory.UTILITIES -> ModelReceiptCategory.UTILITIES
+            else -> ModelReceiptCategory.OTHER
+        }
     }
 }

@@ -3,18 +3,29 @@ package com.receiptr.data.repository
 import android.content.Context
 import android.net.Uri
 import androidx.core.content.FileProvider
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.storage.FirebaseStorage
 import com.receiptr.domain.model.Receipt
 import com.receiptr.domain.repository.ReceiptRepository
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.tasks.await
 import java.io.File
 import java.io.FileOutputStream
 import java.io.InputStream
 import javax.inject.Inject
 
 class ReceiptRepositoryImpl @Inject constructor(
-    private val context: Context
+    private val context: Context,
+    private val firestore: FirebaseFirestore,
+    private val storage: FirebaseStorage
 ) : ReceiptRepository {
+    
+    companion object {
+        private const val RECEIPTS_COLLECTION = "receipts"
+        private const val RECEIPT_IMAGES_PATH = "receipt_images"
+    }
     
     private val receiptsCache = mutableMapOf<String, Receipt>()
     private val userReceipts = mutableMapOf<String, MutableList<Receipt>>()

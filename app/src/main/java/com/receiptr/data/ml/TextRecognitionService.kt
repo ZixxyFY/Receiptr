@@ -9,6 +9,9 @@ import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.Dispatchers
+import com.receiptr.data.ml.preprocessing.ImagePreprocessingService
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.coroutines.resume
@@ -27,10 +30,17 @@ class TextRecognitionService @Inject constructor(
     /**
      * Extracts text from an image bitmap
      */
-    suspend fun extractTextFromBitmap(bitmap: Bitmap): TextRecognitionResult {
-        return suspendCancellableCoroutine { continuation ->
-            val image = InputImage.fromBitmap(bitmap, 0)
-            
+suspend fun extractTextFromBitmap(bitmap: Bitmap): TextRecognitionResult = withContext(Dispatchers.IO) {
+        val preprocessService = ImagePreprocessingService()
+        val preprocessedImage = preprocessService.preprocessReceiptImage(bitmap)
+        if (!preprocessedImage.isSuccess) {
+            throw Exception("Preprocessing failed: ${preprocessedImage.error}")
+        }
+        
+        val processedBitmap = preprocessedImage.processedBitmap
+        val image = InputImage.fromBitmap(processedBitmap, 0)
+        
+        suspendCancellableCoroutine { continuation ->
             recognizer.process(image)
                 .addOnSuccessListener { visionText ->
                     val extractedText = visionText.text
