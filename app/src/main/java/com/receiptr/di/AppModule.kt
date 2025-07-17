@@ -14,8 +14,16 @@ import com.receiptr.domain.repository.ReceiptRepository
 import com.receiptr.data.ml.TextRecognitionService
 import com.receiptr.data.ml.ReceiptParserService
 import com.receiptr.data.ml.enhanced.ReceiptCategorizationService
+import com.receiptr.data.ml.preprocessing.ImagePreprocessingService
+import com.receiptr.data.ml.annotation.AnnotationService
+import com.receiptr.data.ml.annotation.AnnotationRepository
+import com.receiptr.data.ml.annotation.AnnotationRepositoryImpl
+import com.receiptr.data.ml.annotation.AnnotationDao
+import com.receiptr.data.ml.annotation.AnnotationDatabase
+import com.receiptr.data.ml.cloud.CloudVisionService
 import com.receiptr.data.analytics.ReceiptAnalyticsService
 import com.receiptr.data.sync.ReceiptSyncService
+import androidx.room.Room
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -85,8 +93,11 @@ object AppModule {
     
     @Provides
     @Singleton
-    fun provideTextRecognitionService(@ApplicationContext context: Context): TextRecognitionService {
-        return TextRecognitionService(context)
+    fun provideTextRecognitionService(
+        @ApplicationContext context: Context,
+        preprocessService: ImagePreprocessingService
+    ): TextRecognitionService {
+        return TextRecognitionService(context, preprocessService)
     }
     
     @Provides
@@ -110,5 +121,42 @@ object AppModule {
         analyticsService: ReceiptAnalyticsService
     ): ReceiptSyncService {
         return ReceiptSyncService(receiptRepository, analyticsService)
+    }
+    
+    @Provides
+    @Singleton
+    fun provideAnnotationDatabase(@ApplicationContext context: Context): AnnotationDatabase {
+        return Room.databaseBuilder(
+            context,
+            AnnotationDatabase::class.java,
+            "annotation_database"
+        ).build()
+    }
+    
+    @Provides
+    @Singleton
+    fun provideAnnotationDao(database: AnnotationDatabase): AnnotationDao {
+        return database.annotationDao()
+    }
+    
+    @Provides
+    @Singleton
+    fun provideAnnotationRepository(annotationDao: AnnotationDao): AnnotationRepository {
+        return AnnotationRepositoryImpl(annotationDao)
+    }
+    
+    @Provides
+    @Singleton
+    fun provideAnnotationService(
+        @ApplicationContext context: Context,
+        annotationRepository: AnnotationRepository
+    ): AnnotationService {
+        return AnnotationService(context, annotationRepository)
+    }
+    
+    @Provides
+    @Singleton
+    fun provideCloudVisionService(@ApplicationContext context: Context): CloudVisionService {
+        return CloudVisionService(context)
     }
 }

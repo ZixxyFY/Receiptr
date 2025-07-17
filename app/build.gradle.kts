@@ -98,12 +98,24 @@ dependencies {
     // Google ML Kit Text Recognition v2
     implementation("com.google.mlkit:text-recognition:16.0.0")
     
-    // OpenCV for advanced image processing
-    // Note: OpenCV Android should be added manually as a module or use alternative
-    // implementation("org.opencv:opencv-android:4.8.0") // Not available in public repos
+    // Additional image processing utilities
+    implementation("androidx.exifinterface:exifinterface:1.3.6")
     
-    // Alternative: Use OpenCV4Android from a different source or add as module
-    // For now, we'll comment this out and use basic Android image processing
+    // HTTP client for Cloud Vision API
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
+    
+    // JSON parsing
+    implementation("org.json:json:20231013")
+    implementation("com.google.code.gson:gson:2.10.1")
+    
+    // Room database for annotation storage
+    implementation("androidx.room:room-runtime:2.6.1")
+    implementation("androidx.room:room-ktx:2.6.1")
+    kapt("androidx.room:room-compiler:2.6.1")
+    
+    // Note: OpenCV should be added as a module dependency when available
+    // For now, using native Android image processing
     
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

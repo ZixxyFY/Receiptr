@@ -22,7 +22,8 @@ import kotlin.coroutines.resumeWithException
  */
 @Singleton
 class TextRecognitionService @Inject constructor(
-    private val context: Context
+    private val context: Context,
+    private val preprocessService: ImagePreprocessingService
 ) {
     
     private val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
@@ -31,7 +32,6 @@ class TextRecognitionService @Inject constructor(
      * Extracts text from an image bitmap
      */
 suspend fun extractTextFromBitmap(bitmap: Bitmap): TextRecognitionResult = withContext(Dispatchers.IO) {
-        val preprocessService = ImagePreprocessingService()
         val preprocessedImage = preprocessService.preprocessReceiptImage(bitmap)
         if (!preprocessedImage.isSuccess) {
             throw Exception("Preprocessing failed: ${preprocessedImage.error}")
