@@ -12,8 +12,10 @@ import com.receiptr.presentation.home.HomeScreen
 import com.receiptr.presentation.onboarding.WelcomeScreen
 import com.receiptr.presentation.profile.ProfileScreen
 import com.receiptr.presentation.receipts.ReceiptsScreen
+import com.receiptr.presentation.receipts.ReceiptDetailScreen
 import com.receiptr.presentation.scan.ScanScreen
 import com.receiptr.presentation.scan.PhotoPreviewScreen
+import com.receiptr.presentation.scan.ReviewReceiptScreen
 import com.receiptr.presentation.settings.SettingsScreen
 import android.net.Uri
 import java.net.URLDecoder
@@ -126,6 +128,20 @@ fun NavGraph(navController: NavHostController) {
         }
         
         composable(
+            "receipt_detail/{receiptId}",
+            enterTransition = NavigationAnimationSpecs.fastSlideEnter(),
+            exitTransition = NavigationAnimationSpecs.fastSlideExit(),
+            popEnterTransition = NavigationAnimationSpecs.backwardSlide(),
+            popExitTransition = NavigationAnimationSpecs.backwardSlideExit()
+        ) { backStackEntry ->
+            val receiptId = backStackEntry.arguments?.getString("receiptId") ?: ""
+            ReceiptDetailScreen(
+                navController = navController,
+                receiptId = receiptId
+            )
+        }
+        
+        composable(
             "photo_preview/{photoUri}",
             enterTransition = NavigationAnimationSpecs.forwardSlide(),
             exitTransition = NavigationAnimationSpecs.forwardSlideExit(),
@@ -135,6 +151,21 @@ fun NavGraph(navController: NavHostController) {
             val encodedUri = backStackEntry.arguments?.getString("photoUri") ?: ""
             val decodedUri = URLDecoder.decode(encodedUri, StandardCharsets.UTF_8.toString())
             PhotoPreviewScreen(
+                navController = navController,
+                photoUri = Uri.parse(decodedUri)
+            )
+        }
+        
+        composable(
+            "review_receipt/{photoUri}",
+            enterTransition = NavigationAnimationSpecs.forwardSlide(),
+            exitTransition = NavigationAnimationSpecs.forwardSlideExit(),
+            popEnterTransition = NavigationAnimationSpecs.backwardSlide(),
+            popExitTransition = NavigationAnimationSpecs.backwardSlideExit()
+        ) { backStackEntry ->
+            val encodedUri = backStackEntry.arguments?.getString("photoUri") ?: ""
+            val decodedUri = URLDecoder.decode(encodedUri, StandardCharsets.UTF_8.toString())
+            ReviewReceiptScreen(
                 navController = navController,
                 photoUri = Uri.parse(decodedUri)
             )

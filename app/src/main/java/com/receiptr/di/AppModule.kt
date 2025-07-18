@@ -20,9 +20,14 @@ import com.receiptr.data.ml.annotation.AnnotationRepository
 import com.receiptr.data.ml.annotation.AnnotationRepositoryImpl
 import com.receiptr.data.ml.annotation.AnnotationDao
 import com.receiptr.data.ml.annotation.AnnotationDatabase
+import com.receiptr.data.local.ReceiptDatabase
+import com.receiptr.data.local.ReceiptDao
 import com.receiptr.data.ml.cloud.CloudVisionService
 import com.receiptr.data.analytics.ReceiptAnalyticsService
 import com.receiptr.data.sync.ReceiptSyncService
+import com.receiptr.domain.usecase.GenerateReceiptPdfUseCase
+import com.receiptr.data.notification.NotificationService
+import com.receiptr.data.notification.NotificationManager
 import androidx.room.Room
 import dagger.Module
 import dagger.Provides
@@ -83,12 +88,29 @@ object AppModule {
 
     @Provides
     @Singleton
+    fun provideReceiptDatabase(@ApplicationContext context: Context): ReceiptDatabase {
+        return Room.databaseBuilder(
+            context,
+            ReceiptDatabase::class.java,
+            "receipt_database"
+        ).build()
+    }
+    
+    @Provides
+    @Singleton
+    fun provideReceiptDao(database: ReceiptDatabase): ReceiptDao {
+        return database.receiptDao()
+    }
+    
+    @Provides
+    @Singleton
     fun provideReceiptRepository(
         @ApplicationContext context: Context,
         firestore: FirebaseFirestore,
-        storage: FirebaseStorage
+        storage: FirebaseStorage,
+        receiptDao: ReceiptDao
     ): ReceiptRepository {
-        return ReceiptRepositoryImpl(context, firestore, storage)
+        return ReceiptRepositoryImpl(context, firestore, storage, receiptDao)
     }
     
     @Provides
@@ -158,5 +180,30 @@ object AppModule {
     @Singleton
     fun provideCloudVisionService(@ApplicationContext context: Context): CloudVisionService {
         return CloudVisionService(context)
+    }
+    
+    @Provides
+    @Singleton
+    fun provideGenerateReceiptPdfUseCase(
+        @ApplicationContext context: Context,
+        notificationManager: NotificationManager
+    ): GenerateReceiptPdfUseCase {
+        return GenerateReceiptPdfUseCase(context, notificationManager)
+    }
+    
+    @Provides
+    @Singleton
+    fun provideNotificationService(
+        @ApplicationContext context: Context
+    ): NotificationService {
+        return NotificationService(context)
+    }
+    
+    @Provides
+    @Singleton
+    fun provideNotificationManager(
+        notificationService: NotificationService
+    ): NotificationManager {
+        return NotificationManager(notificationService)
     }
 }

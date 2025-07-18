@@ -7,9 +7,13 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import com.receiptr.domain.model.Receipt
 import com.receiptr.domain.repository.ReceiptRepository
+import com.receiptr.data.local.ReceiptDao
+import com.receiptr.data.local.toEntity
+import com.receiptr.data.local.toDomain
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.tasks.await
 import java.io.File
 import java.io.FileOutputStream
@@ -19,7 +23,8 @@ import javax.inject.Inject
 class ReceiptRepositoryImpl @Inject constructor(
     private val context: Context,
     private val firestore: FirebaseFirestore,
-    private val storage: FirebaseStorage
+    private val storage: FirebaseStorage,
+    private val receiptDao: ReceiptDao
 ) : ReceiptRepository {
     
     companion object {
@@ -28,15 +33,25 @@ class ReceiptRepositoryImpl @Inject constructor(
     }
     
     private val receiptsCache = mutableMapOf<String, Receipt>()
-    private val userReceipts = mutableMapOf<String, MutableList<Receipt>>()
     
     override suspend fun saveReceipt(receipt: Receipt): Result<String> {
         return try {
+            // Save to local database
+            receiptDao.insertReceipt(receipt.toEntity())
+            
+            // Keep in cache for faster access
             receiptsCache[receipt.id] = receipt
             
-            // Add to user's receipts
-            val userReceiptsList = userReceipts.getOrPut(receipt.userId) { mutableListOf() }
-            userReceiptsList.add(receipt)
+            // Also save to Firestore for cloud sync (optional)
+            try {
+                firestore.collection(RECEIPTS_COLLECTION)
+                    .document(receipt.id)
+                    .set(receipt)
+                    .await()
+            } catch (e: Exception) {
+                // Cloud sync failed, but local save succeeded
+                // This is acceptable for offline functionality
+            }
             
             Result.success(receipt.id)
         } catch (e: Exception) {
@@ -46,8 +61,17 @@ class ReceiptRepositoryImpl @Inject constructor(
     
     override suspend fun getReceipt(id: String): Result<Receipt> {
         return try {
-            val receipt = receiptsCache[id]
-            if (receipt != null) {
+            // Try cache first
+            val cachedReceipt = receiptsCache[id]
+            if (cachedReceipt != null) {
+                return Result.success(cachedReceipt)
+            }
+            
+            // Try local database
+            val receiptEntity = receiptDao.getReceiptById(id)
+            if (receiptEntity != null) {
+                val receipt = receiptEntity.toDomain()
+                receiptsCache[id] = receipt
                 Result.success(receipt)
             } else {
                 Result.failure(Exception("Receipt not found"))
@@ -58,20 +82,27 @@ class ReceiptRepositoryImpl @Inject constructor(
     }
     
     override suspend fun getAllReceipts(userId: String): Flow<List<Receipt>> {
-        return flowOf(userReceipts[userId] ?: emptyList())
+        return receiptDao.getAllReceiptsForUser(userId).map { entities ->
+            entities.map { it.toDomain() }
+        }
     }
     
     override suspend fun updateReceipt(receipt: Receipt): Result<Unit> {
         return try {
+            // Update in local database
+            receiptDao.updateReceipt(receipt.toEntity())
+            
+            // Update cache
             receiptsCache[receipt.id] = receipt
             
-            // Update in user's receipts
-            val userReceiptsList = userReceipts[receipt.userId]
-            userReceiptsList?.let { list ->
-                val index = list.indexOfFirst { it.id == receipt.id }
-                if (index != -1) {
-                    list[index] = receipt
-                }
+            // Also update in Firestore for cloud sync (optional)
+            try {
+                firestore.collection(RECEIPTS_COLLECTION)
+                    .document(receipt.id)
+                    .set(receipt)
+                    .await()
+            } catch (e: Exception) {
+                // Cloud sync failed, but local update succeeded
             }
             
             Result.success(Unit)
@@ -82,21 +113,33 @@ class ReceiptRepositoryImpl @Inject constructor(
     
     override suspend fun deleteReceipt(id: String): Result<Unit> {
         return try {
-            val receipt = receiptsCache[id]
-            if (receipt != null) {
-                receiptsCache.remove(id)
-                
-                // Remove from user's receipts
-                val userReceiptsList = userReceipts[receipt.userId]
-                userReceiptsList?.removeIf { it.id == id }
-                
-                // Delete photo file if exists
-                if (receipt.photoPath.isNotEmpty()) {
-                    val file = File(receipt.photoPath)
+            // Get receipt info before deletion
+            val receiptEntity = receiptDao.getReceiptById(id)
+            
+            // Delete from local database
+            receiptDao.deleteReceiptById(id)
+            
+            // Remove from cache
+            receiptsCache.remove(id)
+            
+            // Delete photo file if exists
+            receiptEntity?.let { entity ->
+                if (entity.photoPath.isNotEmpty()) {
+                    val file = File(entity.photoPath)
                     if (file.exists()) {
                         file.delete()
                     }
                 }
+            }
+            
+            // Also delete from Firestore for cloud sync (optional)
+            try {
+                firestore.collection(RECEIPTS_COLLECTION)
+                    .document(id)
+                    .delete()
+                    .await()
+            } catch (e: Exception) {
+                // Cloud sync failed, but local deletion succeeded
             }
             
             Result.success(Unit)
@@ -144,13 +187,8 @@ class ReceiptRepositoryImpl @Inject constructor(
     }
     
     override suspend fun searchReceipts(userId: String, query: String): Flow<List<Receipt>> {
-        val userReceiptsList = userReceipts[userId] ?: emptyList()
-        val filteredReceipts = userReceiptsList.filter { receipt ->
-            receipt.merchantName.contains(query, ignoreCase = true) ||
-            receipt.description.contains(query, ignoreCase = true) ||
-            receipt.category.contains(query, ignoreCase = true) ||
-            receipt.notes.contains(query, ignoreCase = true)
+        return receiptDao.searchReceipts(userId, query).map { entities ->
+            entities.map { it.toDomain() }
         }
-        return flowOf(filteredReceipts)
     }
 }

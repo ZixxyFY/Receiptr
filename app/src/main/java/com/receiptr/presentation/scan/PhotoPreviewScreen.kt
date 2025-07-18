@@ -101,21 +101,24 @@ fun PhotoPreviewScreen(
                         },
                         onRetry = {
                             viewModel.processReceiptImageFromUri(photoUri)
+                        },
+                        onEdit = {
+                            navController.navigate("review_receipt/${java.net.URLEncoder.encode(photoUri.toString(), "UTF-8")}")
                         }
                     )
-                }
-                uiState.error != null -> {
-                    ErrorView(
-                        error = uiState.error!!,
-                        onRetry = {
-                            viewModel.processReceiptImageFromUri(photoUri)
-                        }
-                    )
-                }
-                else -> {
-                    // Show basic photo preview while waiting for processing to start
-                    ProcessingView(photoUri = photoUri)
-                }
+            }
+            uiState.error != null -> {
+                ErrorView(
+                    error = uiState.error!!,
+                    onRetry = {
+                        viewModel.processReceiptImageFromUri(photoUri)
+                    }
+                )
+            }
+            else -> {
+                // Show basic photo preview while waiting for processing to start
+                ProcessingView(photoUri = photoUri)
+            }
             }
         }
     }
@@ -222,7 +225,8 @@ fun ExtractedDataView(
     receiptData: ReceiptData,
     isLoading: Boolean,
     onSave: () -> Unit,
-    onRetry: () -> Unit
+    onRetry: () -> Unit,
+    onEdit: () -> Unit
 ) {
     val context = LocalContext.current
     val scrollState = rememberScrollState()
@@ -320,67 +324,95 @@ fun ExtractedDataView(
         }
         
         // Action buttons
-        Row(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            OutlinedButton(
-                onClick = onRetry,
-                modifier = Modifier
-                    .weight(1f)
-                    .height(48.dp),
-                colors = ButtonDefaults.outlinedButtonColors(
-                    contentColor = MaterialTheme.colorScheme.primary
-                ),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.Refresh,
-                    contentDescription = "Retry",
-                    modifier = Modifier.size(18.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "Retry",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Medium
-                )
-            }
-            
-            Spacer(modifier = Modifier.width(16.dp))
-            
+            // Edit button - primary action
             Button(
-                onClick = onSave,
-                enabled = !isLoading,
+                onClick = onEdit,
                 modifier = Modifier
-                    .weight(1f)
+                    .fillMaxWidth()
                     .height(48.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary
                 ),
                 shape = RoundedCornerShape(12.dp)
             ) {
-                if (isLoading) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(18.dp),
-                        color = MaterialTheme.colorScheme.onPrimary,
-                        strokeWidth = 2.dp
-                    )
-                } else {
-                    Icon(
-                        imageVector = Icons.Filled.Save,
-                        contentDescription = "Save",
-                        modifier = Modifier.size(18.dp)
-                    )
-                }
+                Icon(
+                    imageVector = Icons.Filled.Edit,
+                    contentDescription = "Edit",
+                    modifier = Modifier.size(18.dp)
+                )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = if (isLoading) "Saving..." else "Save Receipt",
+                    text = "Review & Edit",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold
                 )
+            }
+            
+            // Secondary actions
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                OutlinedButton(
+                    onClick = onRetry,
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(48.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = MaterialTheme.colorScheme.primary
+                    ),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Refresh,
+                        contentDescription = "Retry",
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Retry",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+                
+                Button(
+                    onClick = onSave,
+                    enabled = !isLoading,
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(48.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.secondary
+                    ),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    if (isLoading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(18.dp),
+                            color = MaterialTheme.colorScheme.onSecondary,
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Icon(
+                            imageVector = Icons.Filled.Save,
+                            contentDescription = "Save",
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = if (isLoading) "Saving..." else "Save As-Is",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
         }
     }

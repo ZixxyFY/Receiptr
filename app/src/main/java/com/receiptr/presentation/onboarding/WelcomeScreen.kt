@@ -97,9 +97,10 @@ fun WelcomeScreen(
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Normal,
                 textAlign = TextAlign.Center,
+                lineHeight = 22.sp,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
+                    .padding(horizontal = 24.dp)
                     .padding(bottom = 16.dp)
             )
             

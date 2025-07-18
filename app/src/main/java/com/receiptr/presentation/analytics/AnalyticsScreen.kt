@@ -26,9 +26,16 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import androidx.compose.animation.core.*
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.slideInVertically
 import com.receiptr.domain.model.UiState
 import com.receiptr.presentation.viewmodel.AnalyticsViewModel
 import com.receiptr.ui.components.SkeletonAnalyticsContent
+import com.receiptr.ui.components.PieChart
+import com.receiptr.ui.components.PieChartData
+import com.receiptr.ui.components.generateCategoryColors
 import com.receiptr.ui.theme.*
 
 // Data models for analytics
@@ -128,6 +135,13 @@ fun AnalyticsScreen(
                             CategoryAnalysisChart(
                                 totalAmount = analyticsData.spendingAnalytics.totalSpending,
                                 changeText = analyticsData.spendingAnalytics.spendingChange,
+                                categoryData = analyticsData.categoryBreakdown
+                            )
+                        }
+                        
+                        item {
+                            // Pie Chart for Category Breakdown
+                            CategoryPieChart(
                                 categoryData = analyticsData.categoryBreakdown
                             )
                         }
@@ -318,12 +332,12 @@ fun MonthlyBarChart(monthlyData: List<com.receiptr.data.analytics.MonthlySpendin
             .height(180.dp),
         horizontalArrangement = Arrangement.SpaceEvenly
     ) {
-        monthlyData.takeLast(7).forEach { monthData ->
+        monthlyData.takeLast(7).forEachIndexed { index, monthData ->
             Column(
                 modifier = Modifier.weight(1f),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Bar
+                // Bar with animation
                 Box(
                     modifier = Modifier
                         .width(24.dp)
@@ -331,10 +345,22 @@ fun MonthlyBarChart(monthlyData: List<com.receiptr.data.analytics.MonthlySpendin
                     contentAlignment = Alignment.BottomCenter
                 ) {
                     val percentage = if (maxAmount > 0) (monthData.amount / maxAmount).toFloat() else 0f
+                    
+                    // Animated bar height
+                    val animatedPercentage by animateFloatAsState(
+                        targetValue = percentage,
+                        animationSpec = tween(
+                            durationMillis = 800,
+                            delayMillis = index * 100,
+                            easing = EaseOutCubic
+                        ),
+                        label = "bar_height_animation"
+                    )
+                    
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .fillMaxHeight(percentage)
+                            .fillMaxHeight(animatedPercentage)
                             .clip(RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp))
                             .background(MaterialTheme.colorScheme.primaryContainer)
                             .border(
@@ -347,13 +373,23 @@ fun MonthlyBarChart(monthlyData: List<com.receiptr.data.analytics.MonthlySpendin
                 
                 Spacer(modifier = Modifier.height(8.dp))
                 
-                // Month Label
-                Text(
-                    text = monthData.month.takeLast(3), // Show last 3 chars (like "Jan")
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-                )
+                // Month Label with fade-in animation
+                AnimatedVisibility(
+                    visible = true,
+                    enter = fadeIn(
+                        animationSpec = tween(
+                            durationMillis = 300,
+                            delayMillis = index * 100 + 400
+                        )
+                    )
+                ) {
+                    Text(
+                        text = monthData.month.takeLast(3), // Show last 3 chars (like "Jan")
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                    )
+                }
             }
         }
     }
@@ -500,7 +536,7 @@ fun CategoryBarChart(categoryData: List<com.receiptr.data.analytics.CategorySpen
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        categoryData.take(5).forEach { categorySpending ->
+        categoryData.take(5).forEachIndexed { index, categorySpending ->
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
@@ -516,7 +552,7 @@ fun CategoryBarChart(categoryData: List<com.receiptr.data.analytics.CategorySpen
                 
                 Spacer(modifier = Modifier.width(16.dp))
                 
-                // Bar
+                // Animated Bar
                 Box(
                     modifier = Modifier
                         .weight(1f)
@@ -525,9 +561,21 @@ fun CategoryBarChart(categoryData: List<com.receiptr.data.analytics.CategorySpen
                         .background(Color.Transparent)
                 ) {
                     val percentage = if (maxAmount > 0) (categorySpending.amount / maxAmount).toFloat() else 0f
+                    
+                    // Animated bar width
+                    val animatedWidth by animateFloatAsState(
+                        targetValue = percentage,
+                        animationSpec = tween(
+                            durationMillis = 1000,
+                            delayMillis = index * 150,
+                            easing = EaseOutCubic
+                        ),
+                        label = "category_bar_width_animation"
+                    )
+                    
                     Box(
                         modifier = Modifier
-                            .fillMaxWidth(percentage)
+                            .fillMaxWidth(animatedWidth)
                             .fillMaxHeight()
                             .clip(RoundedCornerShape(8.dp))
                             .background(MaterialTheme.colorScheme.primaryContainer)
@@ -541,13 +589,23 @@ fun CategoryBarChart(categoryData: List<com.receiptr.data.analytics.CategorySpen
                 
                 Spacer(modifier = Modifier.width(8.dp))
                 
-                // Amount
-                Text(
-                    text = "$${String.format("%.0f", categorySpending.amount)}",
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
+                // Amount with fade-in animation
+                AnimatedVisibility(
+                    visible = true,
+                    enter = fadeIn(
+                        animationSpec = tween(
+                            durationMillis = 300,
+                            delayMillis = index * 150 + 500
+                        )
+                    )
+                ) {
+                    Text(
+                        text = "$${String.format("%.0f", categorySpending.amount)}",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
             }
         }
     }
@@ -599,6 +657,36 @@ fun HorizontalBarChart(data: List<CategoryData>) {
             }
         }
     }
+}
+
+@Composable
+fun CategoryPieChart(
+    categoryData: List<com.receiptr.data.analytics.CategorySpending>
+) {
+    if (categoryData.isEmpty()) {
+        return
+    }
+    
+    // Calculate total amount
+    val totalAmount = categoryData.sumOf { it.amount }
+    
+    // Generate colors for categories
+    val colors = generateCategoryColors(categoryData.size)
+    
+    // Convert to PieChartData
+    val pieChartData = categoryData.mapIndexed { index, categorySpending ->
+        PieChartData(
+            category = categorySpending.category.displayName,
+            amount = categorySpending.amount,
+            color = colors[index],
+            percentage = if (totalAmount > 0) (categorySpending.amount / totalAmount).toFloat() else 0f
+        )
+    }
+    
+    PieChart(
+        data = pieChartData,
+        title = "Category Distribution"
+    )
 }
 
 @Composable

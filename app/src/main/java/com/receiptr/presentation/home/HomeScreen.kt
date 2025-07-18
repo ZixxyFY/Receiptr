@@ -32,6 +32,11 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import androidx.compose.animation.core.*
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.slideInVertically
+import kotlin.math.roundToInt
 import com.receiptr.R
 import com.receiptr.domain.model.AuthState
 import com.receiptr.domain.model.UiState
@@ -268,6 +273,16 @@ fun SpendingOverviewCard(
     monthlySpending: Double = 1247.89,
     spendingChange: String = "+12% from last month"
 ) {
+    // Animation for count-up effect
+    val animatedValue by animateFloatAsState(
+        targetValue = monthlySpending.toFloat(),
+        animationSpec = tween(
+            durationMillis = 1500,
+            easing = EaseOutCubic
+        ),
+        label = "spending_animation"
+    )
+    
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
@@ -303,8 +318,9 @@ fun SpendingOverviewCard(
             
             Spacer(modifier = Modifier.height(12.dp))
             
+            // Animated spending amount
             Text(
-                text = "$${String.format("%.2f", monthlySpending)}",
+                text = "$${String.format("%.2f", animatedValue)}",
                 fontSize = 32.sp,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onPrimary
@@ -418,7 +434,26 @@ fun RecentReceiptsSection(receipts: List<ReceiptItem>, navController: NavControl
             EmptyReceiptsCard()
         } else {
             receipts.take(3).forEachIndexed { index, receipt ->
-                ReceiptItemCard(receipt)
+                // Staggered animation for each receipt card
+                AnimatedVisibility(
+                    visible = true,
+                    enter = slideInVertically(
+                        animationSpec = tween(
+                            durationMillis = 300,
+                            delayMillis = index * 100,
+                            easing = EaseOutCubic
+                        ),
+                        initialOffsetY = { it / 2 }
+                    ) + fadeIn(
+                        animationSpec = tween(
+                            durationMillis = 300,
+                            delayMillis = index * 100,
+                            easing = EaseOutCubic
+                        )
+                    )
+                ) {
+                    ReceiptItemCard(receipt)
+                }
                 if (index < receipts.take(3).size - 1) {
                     Spacer(modifier = Modifier.height(12.dp))
                 }
