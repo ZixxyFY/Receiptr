@@ -84,6 +84,12 @@ fun SettingsScreen(
                             onClick = { navController.navigate("profile") }
                         ),
                         SettingsItem(
+                            icon = Icons.Filled.Email,
+                            title = "Email Integration",
+                            description = "Import receipts from your email",
+                            onClick = { navController.navigate("email_integration") }
+                        ),
+                        SettingsItem(
                             icon = Icons.Filled.Security,
                             title = "Privacy & Security",
                             description = "Manage your account security",
@@ -93,7 +99,7 @@ fun SettingsScreen(
                             icon = Icons.Filled.Notifications,
                             title = "Notifications",
                             description = "Configure notification preferences",
-                            onClick = { /* TODO: Implement notification settings */ }
+                            onClick = { navController.navigate("notifications") }
                         )
                     )
                 )
@@ -135,13 +141,13 @@ fun SettingsScreen(
                             icon = Icons.AutoMirrored.Outlined.Help,
                             title = "Help & Support",
                             description = "Get help with using Receiptr",
-                            onClick = { /* TODO: Implement help */ }
+                            onClick = { navController.navigate("help_center") }
                         ),
                         SettingsItem(
                             icon = Icons.Outlined.Feedback,
                             title = "Send Feedback",
                             description = "Share your thoughts with us",
-                            onClick = { /* TODO: Implement feedback */ }
+                            onClick = { navController.navigate("contact_us") }
                         ),
                         SettingsItem(
                             icon = Icons.Outlined.Info,

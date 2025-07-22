@@ -28,6 +28,11 @@ import com.receiptr.data.sync.ReceiptSyncService
 import com.receiptr.domain.usecase.GenerateReceiptPdfUseCase
 import com.receiptr.data.notification.NotificationService
 import com.receiptr.data.notification.NotificationManager
+import com.receiptr.data.email.EmailService
+import com.receiptr.data.email.EmailAuthService
+import com.receiptr.data.email.EmailReceiptParser
+import com.receiptr.data.email.EmailReceiptRepository
+import com.receiptr.data.cache.CacheDao
 import androidx.room.Room
 import dagger.Module
 import dagger.Provides
@@ -205,5 +210,44 @@ object AppModule {
         notificationService: NotificationService
     ): NotificationManager {
         return NotificationManager(notificationService)
+    }
+    
+    @Provides
+    @Singleton
+    fun provideEmailService(
+        @ApplicationContext context: Context
+    ): EmailService {
+        return EmailService(context)
+    }
+    
+    @Provides
+    @Singleton
+    fun provideEmailAuthService(
+        @ApplicationContext context: Context
+    ): EmailAuthService {
+        return EmailAuthService(context)
+    }
+    
+    @Provides
+    @Singleton
+    fun provideEmailReceiptParser(): EmailReceiptParser {
+        return EmailReceiptParser()
+    }
+    
+    @Provides
+    @Singleton
+    fun provideEmailReceiptRepository(
+        emailService: EmailService,
+        emailReceiptParser: EmailReceiptParser,
+        receiptRepository: ReceiptRepository,
+        notificationManager: NotificationManager
+    ): EmailReceiptRepository {
+        return EmailReceiptRepository(emailService, emailReceiptParser, receiptRepository, notificationManager)
+    }
+    
+    @Provides
+    @Singleton
+    fun provideCacheDao(database: ReceiptDatabase): CacheDao {
+        return database.cacheDao()
     }
 }

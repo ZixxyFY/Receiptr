@@ -331,6 +331,41 @@ class FirebaseAuthService @Inject constructor(
         }
     }
     
+    suspend fun changePassword(currentPassword: String, newPassword: String): AuthResult {
+        return try {
+            val user = firebaseAuth.currentUser
+            if (user == null || user.email == null) {
+                return AuthResult.Error("User not authenticated")
+            }
+            
+            // Re-authenticate the user with current password first
+            val credential = EmailAuthProvider.getCredential(user.email!!, currentPassword)
+            user.reauthenticate(credential).await()
+            
+            // Update password
+            user.updatePassword(newPassword).await()
+            
+            AuthResult.Success(user.toUser())
+        } catch (e: Exception) {
+            val errorMessage = when (e) {
+                is com.google.firebase.auth.FirebaseAuthInvalidCredentialsException -> {
+                    "Current password is incorrect. Please try again."
+                }
+                is com.google.firebase.auth.FirebaseAuthWeakPasswordException -> {
+                    "New password is too weak. Please choose a stronger password."
+                }
+                is com.google.firebase.auth.FirebaseAuthRecentLoginRequiredException -> {
+                    "Please sign out and sign in again before changing your password."
+                }
+                is com.google.firebase.FirebaseNetworkException -> {
+                    "Network error. Please check your connection and try again."
+                }
+                else -> e.message ?: "Failed to change password. Please try again."
+            }
+            AuthResult.Error(errorMessage)
+        }
+    }
+    
     suspend fun signOut(): AuthResult {
         return try {
             firebaseAuth.signOut()

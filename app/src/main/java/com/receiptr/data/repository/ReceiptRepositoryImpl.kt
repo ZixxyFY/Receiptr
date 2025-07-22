@@ -2,7 +2,6 @@ package com.receiptr.data.repository
 
 import android.content.Context
 import android.net.Uri
-import androidx.core.content.FileProvider
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import com.receiptr.domain.model.Receipt
@@ -11,8 +10,6 @@ import com.receiptr.data.local.ReceiptDao
 import com.receiptr.data.local.toEntity
 import com.receiptr.data.local.toDomain
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.tasks.await
 import java.io.File
@@ -29,7 +26,6 @@ class ReceiptRepositoryImpl @Inject constructor(
     
     companion object {
         private const val RECEIPTS_COLLECTION = "receipts"
-        private const val RECEIPT_IMAGES_PATH = "receipt_images"
     }
     
     private val receiptsCache = mutableMapOf<String, Receipt>()

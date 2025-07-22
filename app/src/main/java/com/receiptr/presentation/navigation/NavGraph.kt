@@ -17,6 +17,11 @@ import com.receiptr.presentation.scan.ScanScreen
 import com.receiptr.presentation.scan.PhotoPreviewScreen
 import com.receiptr.presentation.scan.ReviewReceiptScreen
 import com.receiptr.presentation.settings.SettingsScreen
+import com.receiptr.presentation.email.EmailIntegrationScreen
+import com.receiptr.presentation.profile.ChangePasswordScreen
+import com.receiptr.presentation.profile.NotificationsScreen
+import com.receiptr.presentation.profile.HelpCenterScreen
+import com.receiptr.presentation.profile.ContactUsScreen
 import android.net.Uri
 import java.net.URLDecoder
 import java.nio.charset.StandardCharsets
@@ -199,6 +204,56 @@ fun NavGraph(navController: NavHostController) {
             popExitTransition = NavigationAnimationSpecs.slideUpExit()
         ) {
             SettingsScreen(navController = navController)
+        }
+        
+        composable(
+            "email_integration",
+            enterTransition = NavigationAnimationSpecs.forwardSlide(),
+            exitTransition = NavigationAnimationSpecs.forwardSlideExit(),
+            popEnterTransition = NavigationAnimationSpecs.backwardSlide(),
+            popExitTransition = NavigationAnimationSpecs.backwardSlideExit()
+        ) {
+            EmailIntegrationScreen(navController = navController)
+        }
+        
+        composable(
+            "change_password",
+            enterTransition = NavigationAnimationSpecs.forwardSlide(),
+            exitTransition = NavigationAnimationSpecs.forwardSlideExit(),
+            popEnterTransition = NavigationAnimationSpecs.backwardSlide(),
+            popExitTransition = NavigationAnimationSpecs.backwardSlideExit()
+        ) {
+            ChangePasswordScreen(navController = navController)
+        }
+        
+        composable(
+            "notifications",
+            enterTransition = NavigationAnimationSpecs.forwardSlide(),
+            exitTransition = NavigationAnimationSpecs.forwardSlideExit(),
+            popEnterTransition = NavigationAnimationSpecs.backwardSlide(),
+            popExitTransition = NavigationAnimationSpecs.backwardSlideExit()
+        ) {
+            NotificationsScreen(navController = navController)
+        }
+        
+        composable(
+            "help_center",
+            enterTransition = NavigationAnimationSpecs.forwardSlide(),
+            exitTransition = NavigationAnimationSpecs.forwardSlideExit(),
+            popEnterTransition = NavigationAnimationSpecs.backwardSlide(),
+            popExitTransition = NavigationAnimationSpecs.backwardSlideExit()
+        ) {
+            HelpCenterScreen(navController = navController)
+        }
+        
+        composable(
+            "contact_us",
+            enterTransition = NavigationAnimationSpecs.forwardSlide(),
+            exitTransition = NavigationAnimationSpecs.forwardSlideExit(),
+            popEnterTransition = NavigationAnimationSpecs.backwardSlide(),
+            popExitTransition = NavigationAnimationSpecs.backwardSlideExit()
+        ) {
+            ContactUsScreen(navController = navController)
         }
     }
 }

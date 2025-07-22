@@ -44,6 +44,10 @@ class AuthRepositoryImpl @Inject constructor(
         return firebaseAuthService.sendPasswordResetEmail(email)
     }
     
+    override suspend fun changePassword(currentPassword: String, newPassword: String): AuthResult {
+        return firebaseAuthService.changePassword(currentPassword, newPassword)
+    }
+    
     override suspend fun signOut(): AuthResult {
         return firebaseAuthService.signOut()
     }

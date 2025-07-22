@@ -12,6 +12,7 @@ import com.receiptr.domain.usecase.LoginWithGoogleUseCase
 import com.receiptr.domain.usecase.LoginWithPhoneUseCase
 import com.receiptr.domain.usecase.RegisterUserUseCase
 import com.receiptr.domain.usecase.RegisterUserWithProfileUseCase
+import com.receiptr.domain.usecase.ChangePasswordUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -26,7 +27,8 @@ class AuthViewModel @Inject constructor(
     private val loginWithEmailUseCase: LoginWithEmailUseCase,
     private val loginWithPhoneUseCase: LoginWithPhoneUseCase,
     private val registerUserUseCase: RegisterUserUseCase,
-    private val registerUserWithProfileUseCase: RegisterUserWithProfileUseCase
+    private val registerUserWithProfileUseCase: RegisterUserWithProfileUseCase,
+    private val changePasswordUseCase: ChangePasswordUseCase
 ) : ViewModel() {
     
     private val _authState = MutableStateFlow<AuthState>(AuthState.Loading)
@@ -152,6 +154,13 @@ class AuthViewModel @Inject constructor(
                     }
                 }
             }
+        }
+    }
+    
+    fun changePassword(currentPassword: String, newPassword: String) {
+        viewModelScope.launch {
+            _authResult.value = AuthResult.Loading
+            _authResult.value = changePasswordUseCase(currentPassword, newPassword)
         }
     }
     

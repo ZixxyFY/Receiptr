@@ -110,10 +110,14 @@ dependencies {
     implementation("org.json:json:20231013")
     implementation("com.google.code.gson:gson:2.10.1")
     
-    // Room database for annotation storage
+    // Room database for local storage and caching
     implementation("androidx.room:room-runtime:2.6.1")
     implementation("androidx.room:room-ktx:2.6.1")
     kapt("androidx.room:room-compiler:2.6.1")
+    
+    // Additional caching utilities
+    implementation("androidx.datastore:datastore-preferences:1.0.0")
+    implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.7.0")
     
     // WorkManager for background tasks
     implementation("androidx.work:work-runtime-ktx:2.9.0")
@@ -125,6 +129,13 @@ dependencies {
     
     // Parcelize support
     implementation("org.jetbrains.kotlin:kotlin-parcelize-runtime:1.9.20")
+    
+    // Email processing - HTML parsing for email content
+    implementation("org.jsoup:jsoup:1.17.2")
+    
+    // Note: Google API dependencies can be added later for actual Gmail integration:
+    // implementation("com.google.apis:google-api-services-gmail:v1-rev20220404-2.0.0")
+    // implementation("com.google.api-client:google-api-client-android:2.2.0")
     
     // Note: OpenCV should be added as a module dependency when available
     // For now, using native Android image processing

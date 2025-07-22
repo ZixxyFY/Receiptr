@@ -27,6 +27,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.receiptr.presentation.viewmodel.AuthViewModel
+import com.receiptr.presentation.viewmodel.SettingsViewModel
 
 // Profile menu item data
 data class ProfileMenuItem(
@@ -42,10 +43,11 @@ data class ProfileMenuItem(
 @Composable
 fun ProfileScreen(
     navController: NavController,
-    viewModel: AuthViewModel = hiltViewModel()
+    viewModel: AuthViewModel = hiltViewModel(),
+    settingsViewModel: SettingsViewModel = hiltViewModel()
 ) {
     val currentUser by viewModel.currentUser.collectAsState()
-    var darkModeEnabled by remember { mutableStateOf(false) }
+    val darkModeEnabled by settingsViewModel.isDarkModeEnabled.collectAsState()
     
     Column(
         modifier = Modifier
@@ -147,7 +149,7 @@ fun ProfileScreen(
                     title = "Dark Mode",
                     hasToggle = true,
                     toggleValue = darkModeEnabled,
-                    onToggleChange = { darkModeEnabled = !darkModeEnabled }
+                    onToggleChange = { settingsViewModel.toggleDarkMode() }
                 )
             }
             
@@ -164,13 +166,13 @@ fun ProfileScreen(
                 ProfileMenuItemFigma(
                     title = "Change Password",
                     hasArrow = true,
-                    onClick = { /* TODO: Navigate to change password */ }
+                    onClick = { navController.navigate("change_password") }
                 )
                 
                 ProfileMenuItemFigma(
                     title = "Notifications",
                     hasArrow = true,
-                    onClick = { /* TODO: Navigate to notifications */ }
+                    onClick = { navController.navigate("notifications") }
                 )
                 
                 ProfileMenuItemFigma(
@@ -192,13 +194,13 @@ fun ProfileScreen(
                 ProfileMenuItemFigma(
                     title = "Help Center",
                     hasArrow = true,
-                    onClick = { /* TODO: Navigate to help center */ }
+                    onClick = { navController.navigate("help_center") }
                 )
                 
                 ProfileMenuItemFigma(
                     title = "Contact Us",
                     hasArrow = true,
-                    onClick = { /* TODO: Navigate to contact us */ }
+                    onClick = { navController.navigate("contact_us") }
                 )
             }
         }

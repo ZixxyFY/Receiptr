@@ -1,11 +1,14 @@
 package com.receiptr.data.notification
 
+import android.Manifest
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
+import android.content.pm.PackageManager
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.ContextCompat
 import com.receiptr.domain.model.NotificationData
 import com.receiptr.domain.model.NotificationTemplate
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -38,6 +41,17 @@ class NotificationService @Inject constructor(
     }
 
     fun sendNotification(notificationData: NotificationData) {
+        // Check for notification permission on Android 13+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(
+                context, 
+                Manifest.permission.POST_NOTIFICATIONS
+            ) != PackageManager.PERMISSION_GRANTED) {
+                // Permission not granted, cannot send notification
+                return
+            }
+        }
+        
         val template = NotificationTemplate.templates[notificationData.type] ?: return
         val notificationBuilder = NotificationCompat.Builder(context, notificationData.type.channelId)
             .setSmallIcon(android.R.drawable.ic_dialog_info) // Placeholder icon

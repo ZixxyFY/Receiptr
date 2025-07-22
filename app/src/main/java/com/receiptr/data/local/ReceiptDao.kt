@@ -7,9 +7,19 @@ import kotlinx.coroutines.flow.Flow
 interface ReceiptDao {
     @Query("SELECT * FROM receipts WHERE userId = :userId ORDER BY date DESC")
     fun getAllReceiptsForUser(userId: String): Flow<List<ReceiptEntity>>
-
+    
+    @Query("SELECT * FROM receipts WHERE userId = :userId ORDER BY date DESC")
+    suspend fun getAllReceiptsForUserSync(userId: String): List<ReceiptEntity>
+    
     @Query("SELECT * FROM receipts WHERE id = :id")
     suspend fun getReceiptById(id: String): ReceiptEntity?
+    
+    
+    @Insert
+    suspend fun insertReceipts(receipts: List<ReceiptEntity>)
+    
+    @Query("DELETE FROM receipts WHERE userId = :userId")
+    suspend fun deleteAllReceiptsForUser(userId: String)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertReceipt(receipt: ReceiptEntity)
