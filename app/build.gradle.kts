@@ -137,8 +137,10 @@ dependencies {
     // implementation("com.google.apis:google-api-services-gmail:v1-rev20220404-2.0.0")
     // implementation("com.google.api-client:google-api-client-android:2.2.0")
     
-    // Note: OpenCV should be added as a module dependency when available
-    // For now, using native Android image processing
+    // OpenCV for advanced image processing (Manual integration required)
+    // For now, we'll use enhanced native Android image processing
+    // To add OpenCV: Download OpenCV Android SDK and add as module dependency
+    // implementation project(':opencv')
     
     testImplementation(libs.junit)
     testImplementation("io.mockk:mockk:1.13.8")

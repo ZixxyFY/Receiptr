@@ -58,6 +58,7 @@ class ImagePreprocessingService @Inject constructor(
     // OpenCV initialization disabled until library is properly integrated
     init {
         // For now, using native Android image processing only
+        // For now, using native Android image processing only
         isOpenCVInitialized = false
         Log.d(TAG, "Using native Android image processing")
     }
