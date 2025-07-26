@@ -7,6 +7,9 @@ import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
+import androidx.core.graphics.drawable.toBitmap
+import coil.ImageLoader
+import coil.request.ImageRequest
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
@@ -75,11 +78,17 @@ class TestMLKitActivity : ComponentActivity() {
         ) { uri: Uri? ->
             uri?.let {
                 selectedImageUri = it
-                try {
-                    val bitmap = MediaStore.Images.Media.getBitmap(context.contentResolver, it)
-                    selectedBitmap = bitmap
-                } catch (e: Exception) {
-                    error = "Failed to load image: ${e.message}"
+                coroutineScope.launch {
+                    try {
+                        val imageLoader = ImageLoader(context)
+                        val request = ImageRequest.Builder(context)
+                            .data(it)
+                            .build()
+                        val drawable = imageLoader.execute(request).drawable
+                        selectedBitmap = drawable?.toBitmap()
+                    } catch (e: Exception) {
+                        error = "Failed to load image: ${e.message}"
+                    }
                 }
             }
         }

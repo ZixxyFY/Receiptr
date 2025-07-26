@@ -127,11 +127,41 @@ object AppModule {
         return TextRecognitionService(context, preprocessService)
     }
     
-    @Provides
-    @Singleton
-    fun provideReceiptParserService(): ReceiptParserService {
-        return ReceiptParserService()
-    }
+@Provides
+@Singleton
+fun provideDateParserService(): com.receiptr.data.ml.parser.DateParserService {
+    return com.receiptr.data.ml.parser.DateParserService()
+}
+
+@Provides
+@Singleton
+fun provideReceiptParserService(dateParserService: com.receiptr.data.ml.parser.DateParserService): ReceiptParserService {
+    return ReceiptParserService(dateParserService)
+}
+
+@Provides
+@Singleton
+fun provideDocumentScannerService(@ApplicationContext context: Context): com.receiptr.data.ml.scanner.DocumentScannerService {
+    return com.receiptr.data.ml.scanner.DocumentScannerService(context)
+}
+
+@Provides
+@Singleton
+fun provideReceiptProcessingPipeline(
+    @ApplicationContext context: Context,
+    documentScannerService: com.receiptr.data.ml.scanner.DocumentScannerService,
+    textRecognitionService: com.receiptr.data.ml.TextRecognitionService,
+    receiptParserService: com.receiptr.data.ml.ReceiptParserService,
+    imagePreprocessingService: com.receiptr.data.ml.preprocessing.ImagePreprocessingService
+): com.receiptr.data.ml.ReceiptProcessingPipeline {
+    return com.receiptr.data.ml.ReceiptProcessingPipeline(
+        context,
+        documentScannerService,
+        textRecognitionService,
+        receiptParserService,
+        imagePreprocessingService
+    )
+}
     
     @Provides
     @Singleton

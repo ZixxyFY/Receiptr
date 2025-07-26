@@ -38,7 +38,7 @@ class CachingService @Inject constructor(
         fetchFromCache: suspend () -> T?,
         fetchFromNetwork: suspend () -> T,
         saveToCache: suspend (T) -> Unit
-    ): Flow<out CacheResult<T>> = flow {
+    ): Flow<CacheResult<T>> = flow {
         Log.d(TAG, "Starting stale-while-revalidate for key: $cacheKey")
         
         // Step 1: Check cache metadata to understand cache state
@@ -158,7 +158,7 @@ class CachingService @Inject constructor(
         cacheKey: String,
         fetchFromNetwork: suspend () -> T,
         saveToCache: suspend (T) -> Unit
-    ): Flow<out CacheResult<T>> = flow {
+    ): Flow<CacheResult<T>> = flow {
         // Invalidate existing cache
         invalidateCache(cacheKey)
         

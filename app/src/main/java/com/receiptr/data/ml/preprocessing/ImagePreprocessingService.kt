@@ -19,7 +19,8 @@ import androidx.exifinterface.media.ExifInterface
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 // Note: OpenCV imports commented out until library is properly integrated
 // import org.opencv.android.OpenCVLoaderCallback
@@ -40,6 +41,7 @@ import kotlin.math.*
 class ImagePreprocessingService @Inject constructor(
     @ApplicationContext private val context: Context
 ) {
+    private val processingScope = CoroutineScope(Dispatchers.Default + SupervisorJob())
     
     companion object {
         private const val TAG = "ImagePreprocessingService"
@@ -86,7 +88,7 @@ class ImagePreprocessingService @Inject constructor(
                 )
                 
                 // Process in background
-                kotlinx.coroutines.GlobalScope.launch(Dispatchers.Default) {
+                processingScope.launch {
                     val result = preprocessReceiptImage(bitmap, quickOptions)
                     onImageAnalyzed(result)
                 }

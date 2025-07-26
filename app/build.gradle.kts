@@ -99,6 +99,10 @@ dependencies {
     // Google ML Kit Text Recognition v2
     implementation("com.google.mlkit:text-recognition:16.0.0")
     
+    // Google Document Scanner API for receipt capture and cleaning
+    // TODO: Re-enable when API is stable
+    // implementation("com.google.android.gms:play-services-mlkit-document-scanner:16.0.0-beta1")
+    
     // Additional image processing utilities
     implementation("androidx.exifinterface:exifinterface:1.3.6")
     
@@ -145,6 +149,7 @@ dependencies {
     testImplementation(libs.junit)
     testImplementation("io.mockk:mockk:1.13.8")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
+    testImplementation("org.robolectric:robolectric:4.11.1")
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
