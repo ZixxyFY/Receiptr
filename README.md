@@ -725,6 +725,26 @@ Special thanks to:
 - 🏅 **Innovation Award** - Google I/O Extended 2024
 - ⭐ **4.8/5 Stars** - Average user rating (when published)
 
+## 👨‍💻 Developer
+
+<div align="center">
+
+### **Built by [Your Name]** 🚀
+
+**Connect with me on social media:**
+
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white)](https://linkedin.com/in/neeraj-sahu-4a41a1248)
+[![Twitter](https://img.shields.io/badge/Twitter-1DA1F2?style=for-the-badge&logo=twitter&logoColor=white)](https://twitter.com/your-twitter)
+[![GitHub](https://img.shields.io/badge/GitHub-100000?style=for-the-badge&logo=github&logoColor=white)](https://github.com/ZixxyFY)
+[![Instagram](https://img.shields.io/badge/Instagram-E4405F?style=for-the-badge&logo=instagram&logoColor=white)](https://instagram.com/your-instagram)
+[![YouTube](https://img.shields.io/badge/YouTube-FF0000?style=for-the-badge&logo=youtube&logoColor=white)](https://youtube.com/@your-channel)
+[![Portfolio](https://img.shields.io/badge/Portfolio-FF5722?style=for-the-badge&logo=google-chrome&logoColor=white)](https://your-portfolio.com)
+[![Email](https://img.shields.io/badge/Email-D14836?style=for-the-badge&logo=gmail&logoColor=white)](mailto:sahuneeraj112005@gmail.com)
+
+**"Passionate about creating innovative mobile experiences that solve real-world problems! 💡"**
+
+</div>
+
 ## 📄 License
 
 ```

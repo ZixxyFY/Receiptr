@@ -17,6 +17,7 @@ import com.receiptr.presentation.scan.ScanScreen
 import com.receiptr.presentation.scan.PhotoPreviewScreen
 import com.receiptr.presentation.scan.ReviewReceiptScreen
 import com.receiptr.presentation.settings.SettingsScreen
+import com.receiptr.presentation.settings.ThemeSettingsScreen
 import com.receiptr.presentation.email.EmailIntegrationScreen
 import com.receiptr.presentation.profile.ChangePasswordScreen
 import com.receiptr.presentation.profile.NotificationsScreen
@@ -204,6 +205,16 @@ fun NavGraph(navController: NavHostController) {
             popExitTransition = NavigationAnimationSpecs.slideUpExit()
         ) {
             SettingsScreen(navController = navController)
+        }
+        
+        composable(
+            "theme_settings",
+            enterTransition = NavigationAnimationSpecs.forwardSlide(),
+            exitTransition = NavigationAnimationSpecs.forwardSlideExit(),
+            popEnterTransition = NavigationAnimationSpecs.backwardSlide(),
+            popExitTransition = NavigationAnimationSpecs.backwardSlideExit()
+        ) {
+            ThemeSettingsScreen(navController = navController)
         }
         
         composable(

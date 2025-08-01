@@ -24,14 +24,17 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.receiptr.presentation.viewmodel.AuthViewModel
+import com.receiptr.presentation.viewmodel.SettingsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
     navController: NavController,
-    authViewModel: AuthViewModel = hiltViewModel()
+    authViewModel: AuthViewModel = hiltViewModel(),
+    settingsViewModel: SettingsViewModel = hiltViewModel()
 ) {
     val currentUser by authViewModel.currentUser.collectAsState()
+    val themeMode by settingsViewModel.themeMode.collectAsState()
     
     Scaffold(
         topBar = {
@@ -113,8 +116,13 @@ fun SettingsScreen(
                         SettingsItem(
                             icon = Icons.Outlined.Palette,
                             title = "Theme",
-                            description = "Change app appearance",
-                            onClick = { /* TODO: Implement theme settings */ }
+                            description = when (themeMode) {
+                                SettingsViewModel.THEME_SYSTEM -> "Follow system theme"
+                                SettingsViewModel.THEME_LIGHT -> "Light theme"
+                                SettingsViewModel.THEME_DARK -> "Dark theme"
+                                else -> "Change app appearance"
+                            },
+                            onClick = { navController.navigate("theme_settings") }
                         ),
                         SettingsItem(
                             icon = Icons.Outlined.Language,

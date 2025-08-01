@@ -19,19 +19,33 @@ class SettingsViewModel @Inject constructor(
     
     companion object {
         private const val PREFERENCES_NAME = "receiptr_settings"
-        private const val KEY_DARK_MODE = "dark_mode"
+        private const val KEY_THEME_MODE = "theme_mode"
         private const val KEY_LANGUAGE = "language"
         private const val KEY_NOTIFICATIONS_ENABLED = "notifications_enabled"
         private const val KEY_EMAIL_NOTIFICATIONS = "email_notifications"
         private const val KEY_PUSH_NOTIFICATIONS = "push_notifications"
+        
+        const val THEME_SYSTEM = "system"
+        const val THEME_LIGHT = "light"
+        const val THEME_DARK = "dark"
     }
     
     private val preferences: SharedPreferences = 
         context.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE)
     
-    // Dark Mode
+    // Theme Mode
+    private val _themeMode = MutableStateFlow(
+        preferences.getString(KEY_THEME_MODE, THEME_SYSTEM) ?: THEME_SYSTEM
+    )
+    val themeMode: StateFlow<String> = _themeMode.asStateFlow()
+    
+    // Backward compatibility - Dark Mode (deprecated but kept for migration)
     private val _isDarkModeEnabled = MutableStateFlow(
-        preferences.getBoolean(KEY_DARK_MODE, false)
+        when (_themeMode.value) {
+            THEME_DARK -> true
+            THEME_LIGHT -> false
+            else -> false // System default
+        }
     )
     val isDarkModeEnabled: StateFlow<Boolean> = _isDarkModeEnabled.asStateFlow()
     
@@ -57,11 +71,27 @@ class SettingsViewModel @Inject constructor(
     )
     val pushNotificationsEnabled: StateFlow<Boolean> = _pushNotificationsEnabled.asStateFlow()
     
+    fun setThemeMode(themeMode: String) {
+        viewModelScope.launch {
+            _themeMode.value = themeMode
+            _isDarkModeEnabled.value = when (themeMode) {
+                THEME_DARK -> true
+                THEME_LIGHT -> false
+                else -> false // System will be handled in MainActivity
+            }
+            preferences.edit().putString(KEY_THEME_MODE, themeMode).apply()
+        }
+    }
+    
     fun toggleDarkMode() {
         viewModelScope.launch {
-            val newValue = !_isDarkModeEnabled.value
-            _isDarkModeEnabled.value = newValue
-            preferences.edit().putBoolean(KEY_DARK_MODE, newValue).apply()
+            val currentTheme = _themeMode.value
+            val newTheme = when (currentTheme) {
+                THEME_LIGHT -> THEME_DARK
+                THEME_DARK -> THEME_LIGHT
+                else -> THEME_DARK // From system to dark
+            }
+            setThemeMode(newTheme)
         }
     }
     
