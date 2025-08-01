@@ -729,7 +729,7 @@ Special thanks to:
 
 <div align="center">
 
-### **Built by [Your Name]** 🚀
+### **Built by [Neeraj Sahu]** 🚀
 
 **Connect with me on social media:**
 
