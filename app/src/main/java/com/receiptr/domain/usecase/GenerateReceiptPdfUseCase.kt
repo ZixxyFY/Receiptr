@@ -41,9 +41,10 @@ class GenerateReceiptPdfUseCase @Inject constructor(
         private const val SMALL_TEXT_SIZE = 12f
         private const val AMOUNT_TEXT_SIZE = 20f
         
-        private const val LINE_SPACING = 20f
-        private const val SECTION_SPACING = 30f
+        private const val LINE_SPACING = 24f // Increased for better readability
+        private const val SECTION_SPACING = 35f // Increased for better separation
         private const val BORDER_WIDTH = 2f
+        private const val KEY_VALUE_SPACING = 130f // Fixed spacing for key-value pairs
         
         // Colors
         private const val BORDER_COLOR = Color.BLACK
@@ -160,16 +161,39 @@ class GenerateReceiptPdfUseCase @Inject constructor(
         leftX: Float,
         y: Float,
         key: String,
-        value: String
+        value: String,
+        fixedKeyWidth: Float = KEY_VALUE_SPACING
     ): Float {
+        // Draw key with consistent positioning
         canvas.drawText(key, leftX, y + keyPaint.textSize, keyPaint)
         
-        // Calculate value position (leave space after key)
-        val keyWidth = keyPaint.measureText(key)
-        val valueX = leftX + keyWidth + 40 // Add some spacing
+        // Draw value at fixed position for perfect alignment
+        val valueX = leftX + fixedKeyWidth
         canvas.drawText(value, valueX, y + valuePaint.textSize, valuePaint)
         
         return LINE_SPACING
+    }
+    
+    private fun drawCenteredText(
+        canvas: Canvas,
+        paint: Paint,
+        text: String,
+        centerX: Float,
+        y: Float
+    ) {
+        val textWidth = paint.measureText(text)
+        canvas.drawText(text, centerX - textWidth / 2, y, paint)
+    }
+    
+    private fun drawRightAlignedText(
+        canvas: Canvas,
+        paint: Paint,
+        text: String,
+        rightX: Float,
+        y: Float
+    ) {
+        val textWidth = paint.measureText(text)
+        canvas.drawText(text, rightX - textWidth, y, paint)
     }
     
     private fun drawOuterBorder(canvas: Canvas, borderPaint: Paint) {
@@ -183,18 +207,26 @@ class GenerateReceiptPdfUseCase @Inject constructor(
         headerPaint: Paint,
         currentY: Float
     ): Float {
-        var y = currentY
-        // Drawing logo
-        canvas.drawText("[Receiptr Logo]", MARGIN.toFloat() + 10, y, logoPaint)
-        // Drawing "Receipt Details"
-        y += logoPaint.textSize + LINE_SPACING
-        canvas.drawText("Receipt Details", (PAGE_WIDTH / 2).toFloat(), y, headerPaint)
-        // Drawing export date
-        y += headerPaint.textSize + LINE_SPACING
+        val y = currentY
+        val leftX = MARGIN.toFloat() + 10
+        val centerX = PAGE_WIDTH / 2f
+        val rightX = PAGE_WIDTH - MARGIN.toFloat() - 10
+        val textY = y + Math.max(logoPaint.textSize, headerPaint.textSize)
+        
+        // Drawing logo on the left
+        canvas.drawText("[Receiptr Logo]", leftX, textY, logoPaint)
+        
+        // Drawing "Receipt Details" centered
+        val titleText = "Receipt Details"
+        drawCenteredText(canvas, headerPaint, titleText, centerX, textY)
+        
+        // Drawing export date on the right
         val dateFormat = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
         val currentDate = dateFormat.format(Date())
-        canvas.drawText("Exported on: $currentDate", (PAGE_WIDTH / 2).toFloat(), y, headerPaint)
-        return y + SECTION_SPACING
+        val dateText = "Exported on: $currentDate"
+        drawRightAlignedText(canvas, headerPaint, dateText, rightX, textY)
+        
+        return textY + SECTION_SPACING
     }
 
     private fun drawCustomReceiptDetails(
@@ -209,18 +241,25 @@ class GenerateReceiptPdfUseCase @Inject constructor(
     ): Float {
         var y = currentY
         val leftX = MARGIN.toFloat() + 20
-        // Drawing Merchant
+        
+        // Drawing receipt details with consistent alignment
         y += drawKeyValuePair(canvas, boldPaint, normalPaint, leftX, y, "Merchant:", receipt.merchantName.ifEmpty { "Unknown" })
-        // Drawing Date
         y += drawKeyValuePair(canvas, boldPaint, normalPaint, leftX, y, "Date:", SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()).format(Date(receipt.date)))
-        // Drawing Category
         y += drawKeyValuePair(canvas, boldPaint, normalPaint, leftX, y, "Category:", receipt.category)
-        // Drawing total amount with a border
-        val rectY = y + LINE_SPACING
-        val rect = RectF(MARGIN.toFloat() + 20, rectY, PAGE_WIDTH - MARGIN.toFloat() - 20, rectY + LINE_SPACING * 2)
-        canvas.drawRoundRect(rect, 10f, 10f, fillPaint)
-        canvas.drawRoundRect(rect, 10f, 10f, borderPaint)
-        canvas.drawText("Total Amount: ${receipt.currency} ${String.format("%.2f", receipt.totalAmount)}", leftX + 10, rectY + amountPaint.textSize + 10, amountPaint)
+        
+        // Drawing total amount with a border and proper centering
+        y += LINE_SPACING * 1.5f // Extra space before total
+        val rectHeight = amountPaint.textSize + 24f // Increased padding
+        val rect = RectF(leftX, y, PAGE_WIDTH - MARGIN.toFloat() - 20, y + rectHeight)
+        canvas.drawRoundRect(rect, 12f, 12f, fillPaint)
+        canvas.drawRoundRect(rect, 12f, 12f, borderPaint)
+        
+        // Center the total amount text within the rectangle
+        val totalText = "Total Amount: ${receipt.currency} ${String.format("%.2f", receipt.totalAmount)}"
+        val centerX = rect.left + rect.width() / 2
+        val textY = rect.top + (rect.height() + amountPaint.textSize) / 2 - 2f // Slight adjustment for visual centering
+        drawCenteredText(canvas, amountPaint, totalText, centerX, textY)
+        
         return rect.bottom
     }
 
@@ -295,10 +334,15 @@ class GenerateReceiptPdfUseCase @Inject constructor(
         smallPaint: Paint,
         borderPaint: Paint
     ) {
-        val y = PAGE_HEIGHT - MARGIN.toFloat() - 40
+        val y = PAGE_HEIGHT - MARGIN.toFloat() - 25f
         val leftX = MARGIN.toFloat() + 20
-        // Drawing footer content
+        val rightX = PAGE_WIDTH - MARGIN.toFloat() - 20
+        
+        // Draw left-aligned footer text
         canvas.drawText("Generated by Receiptr", leftX, y, smallPaint)
-        canvas.drawText("© 2025 Receiptr. All rights reserved. www.receiptr-app.com", (PAGE_WIDTH / 2).toFloat(), y, smallPaint)
+        
+        // Draw right-aligned copyright text
+        val copyrightText = "© 2025 Receiptr. All rights reserved. www.receiptr-app.com"
+        drawRightAlignedText(canvas, smallPaint, copyrightText, rightX, y)
     }
 }
